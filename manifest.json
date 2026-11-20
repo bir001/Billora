@@ -1,0 +1,1 @@
+{"name":"Billora POS Billing","short_name":"Billora","description":"Fast touch billing, inventory and reports","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#f6f5f7","theme_color":"#582c4d","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}

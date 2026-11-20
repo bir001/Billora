@@ -1,98 +1,30 @@
-BILLORA — FAST TOUCH BILLING POS (Enhanced Demo)
+BILLORA POS — GitHub Pages PWA
 
-================================================
-WHAT'S NEW / FEATURES
-================================================
-✓ Touch Billing (POS style)
-  - New Bill button → category tabs (All + custom categories)
-  - Large touch-friendly item cards
-  - Live cart with qty +/−, tax, discount
-  - Barcode scanner support (keyboard wedge / USB scanners)
-  - Search by name / SKU / barcode
+FILES TO UPLOAD TO THE ROOT OF ONE GITHUB REPOSITORY:
+index.html, style.css, app.js, config.js, manifest.json, sw.js, icon.svg
 
-✓ Save + Print
-  - Save bill
-  - Save & Print
-  - Double Print option
-  - KOT (Kitchen Order Ticket) print
+PUBLISH:
+1. Create a GitHub repository.
+2. Upload all files directly to the repository root (not inside another folder).
+3. Repository Settings > Pages > Deploy from a branch > main > /(root) > Save.
+4. Open the published HTTPS address in Chrome on Android/PC.
+5. Android Chrome menu > Install app / Add to Home screen.
 
-✓ Thermal Printer Ready
-  - 2-inch (58mm) and 3-inch (80mm) bill formats
-  - Normal / A4 option
-  - Customizable header, address, phone, GSTIN, footer
-  - Print via browser (works with most USB / Bluetooth thermal printers that support system print)
+CURRENT WORKING FEATURES:
+- Touch-first POS billing, category filters, product search, keyboard-wedge barcode scanning
+- Live cart totals, GST, discount, cash/UPI/card/credit, save bill, reprint
+- 58mm/80mm receipt layout, copies/double print, browser print-to-PDF
+- KOT ticket and kitchen status
+- Product/category management, purchase entry, stock adjustment and sales stock deduction
+- Customer list, date-based reports, CSV export, JSON backup/restore
+- PWA manifest + service worker cache for app shell/offline opening
+- Optional Supabase login and workspace cloud pull/push + realtime update listener
 
-✓ Inventory
-  - Stock tracking on every sale
-  - Purchase / Stock-In entry
-  - Low stock alerts
-
-✓ Reports
-  - Today / This Week / This Month / All Time
-  - Sales totals, collected, pending
-  - 7-day chart + top items
-
-✓ Multi-user (local)
-  - Multiple users with PIN login
-  - Roles: Admin / Cashier
-  - Default PIN for demo users: 1234
-
-✓ Other
-  - Customers directory
-  - Products with category, barcode, SKU, unit
-  - Business profile & print settings
-  - JSON backup export / import
-  - 4 themes (Royal, Midnight, Ocean, Indigo)
-  - Mobile-first responsive UI
-
-================================================
-HOW TO RUN
-================================================
-1. Keep these 3 files in the same folder:
-   - index.html
-   - style.css
-   - app.js
-
-2. Open index.html in Chrome / Edge / Firefox
-   OR upload the folder to GitHub and enable GitHub Pages.
-
-3. First screen asks for User + PIN (demo PIN = 1234)
-
-================================================
-PRINTING NOTES (Important)
-================================================
-- This is a browser-based demo. Real USB / Bluetooth thermal printing
-  depends on your operating system printer drivers.
-- Recommended:
-  1. Install your thermal printer drivers (58mm or 80mm).
-  2. Set the printer as default or select it in the browser print dialog.
-  3. In Billora Settings → choose 58mm or 80mm print size.
-  4. Use "Save & Print" or "Print / PDF".
-- For pure ESC/POS direct printing you would need a native app
-  or a local print agent (not included in this pure web demo).
-
-================================================
-BARCODE SCANNER
-================================================
-- Most USB / Bluetooth barcode scanners work as keyboard.
-- On the Billing screen just scan — item will be added automatically.
-- You can also type barcode and press Enter.
-
-================================================
-DEMO LIMITATIONS
-================================================
-- Data is stored only in the current browser (localStorage).
-- No cloud sync, no real multi-device, no payment gateway.
-- No GST e-invoice / e-way bill / legal compliance.
-- Multi-user is local PIN only (not secure server auth).
-- Do NOT use as production accounting software without
-  proper backend, authentication, database and tax workflows.
-
-================================================
-DEFAULT DEMO DATA
-================================================
-Users   : Owner / Cashier  (PIN 1234)
-Items   : Premium Service, Product A, Consultation, Tea, Coffee, Samosa
-Customers: Aarav Sharma, Meera Enterprises, Walk-in
-
-Enjoy fast billing!
+IMPORTANT LIMITATIONS / NEXT SETUP:
+- Local data is saved in the current browser/device by default. It does NOT magically sync across devices until Supabase is configured.
+- Open config.js and paste Supabase Project URL and anon/public key (never service_role key).
+- In Supabase SQL Editor, run the SQL copied from Billora > Users & Sync > Copy database setup SQL.
+- Create/login owner account, insert owner membership row in workspace_members with workspace_id matching the same workspace ID shown in Billora, user_id = owner's Auth UUID, role='owner'. Add each staff user's UUID similarly with role cashier/manager/staff.
+- Then press Pull/Push in Users & Sync. Use the same workspace ID on every device. This starter stores a workspace snapshot as JSONB; for production high-concurrency multi-cashier use normalized transaction tables, server-side stock locking, audit logs and tested conflict handling.
+- The browser-based version cannot guarantee direct USB/Bluetooth ESC/POS printing or silent printing on every device. It invokes the system print dialog; paired printer compatibility depends on OS/browser/driver. A native Android/desktop print bridge is required for guaranteed direct ESC/POS printing.
+- Offline mode caches the app shell and keeps local data on that device. Offline changes are not automatically merged to cloud; push/pull is manual in this starter to avoid overwriting another cashier's work. Do not use as production accounting until cloud schema, role policies, concurrency and GST workflows are tested.
