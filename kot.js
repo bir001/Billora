@@ -1,0 +1,5 @@
+/* KOT MANAGEMENT: kitchen orders with status */
+function kotSave(){if(!Cart.items.length)return;const D=DB.d,k={id:uid(),no:D.kseq++,t:Date.now(),items:structuredClone(Cart.items),note:Cart.note,status:'Pending',by:ME.name};D.kots.unshift(k);DB.save();toast('KOT #'+k.no+' bana');Print.run(k,true)}
+V.kot=()=>`<div class="pagehead"><div><h1>KOT</h1><p>Kitchen orders</p></div></div>${DB.d.kots.map(k=>`<div class="card kc"><div class="row"><b>KOT #${k.no} ${k.note?'• '+esc(k.note):''}</b><span class="pill ${k.status==='Pending'?'low':k.status==='Ready'?'ok':''}">${k.status}</span></div><small class="muted">${fmtD(k.t)} • ${esc(k.by)}</small><div style="margin:8px 0">${k.items.map(i=>`${esc(i.name)} × ${i.qty}`).join(', ')}</div>
+ <div class="acts"><button class="btn o sm" onclick="kotSt('${k.id}','Ready')">Ready</button><button class="btn o sm" onclick="kotSt('${k.id}','Served')">Served</button><button class="btn o sm" onclick="Print.run(DB.d.kots.find(x=>x.id==='${k.id}'),true)">Print</button></div></div>`).join('')||'<div class="emptybox">Koi KOT nahi</div>'}`;
+function kotSt(id,s){DB.d.kots.find(x=>x.id===id).status=s;DB.save();render()}
