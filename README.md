@@ -1,2 +1,0 @@
-# Billora
-Billora Billing Software 
