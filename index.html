@@ -1,27 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#582c4d"><meta name="description" content="Billora fast touch billing, POS, inventory and reports.">
-<title>Billora POS</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div id="app">
-<header class="topbar"><button class="brand" onclick="go('billing')"><span class="brandmark">B</span><span>billora<small>POS & BUSINESS</small></span></button><div class="topright"><span id="syncState" class="sync"><i></i> Local mode</span><button class="iconbtn" onclick="toggleTheme()" title="Theme">◐</button><button class="iconbtn" onclick="openSettings()" title="Settings">⚙</button></div></header>
-<div class="layout"><aside class="sidebar" id="sidebar"><div class="business-chip"><span class="avatar">B</span><span><b id="businessLabel">My Business</b><small>Business workspace</small></span></div><nav>
-<button class="nav active" data-page="billing" onclick="go('billing')">▦ <span>Fast Billing</span></button>
-<button class="nav" data-page="bills" onclick="go('bills')">▤ <span>All Bills</span></button>
-<button class="nav" data-page="kot" onclick="go('kot')">☷ <span>KOT Orders</span></button>
-<button class="nav" data-page="products" onclick="go('products')">▣ <span>Products & Categories</span></button>
-<button class="nav" data-page="purchase" onclick="go('purchase')">⇧ <span>Purchase</span></button>
-<button class="nav" data-page="inventory" onclick="go('inventory')">▥ <span>Inventory</span></button>
-<button class="nav" data-page="customers" onclick="go('customers')">♙ <span>Customers</span></button>
-<button class="nav" data-page="reports" onclick="go('reports')">▧ <span>Reports</span></button>
-<button class="nav" data-page="users" onclick="go('users')">♧ <span>Users & Sync</span></button>
-<button class="nav" data-page="settings" onclick="go('settings')">⚙ <span>Settings & Print</span></button>
-</nav><div class="sidefoot">Billora POS · PWA<br><small>Data stored on this device until cloud is connected.</small></div></aside>
-<main id="main"></main></div>
-<div id="toast" class="toast"></div><div id="modal" class="modal hidden"><div class="modalbox" id="modalbox"></div></div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script>
-</body></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#EEF3FF"><title>Billora — POS Billing & Inventory</title>
+<link rel="manifest" href="manifest.json"><script>try{document.documentElement.dataset.theme=localStorage.getItem('billora_theme')||'royal'}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/pos.css"></head><body>
+<header><button class="ib" onclick="openDrawer()" aria-label="Menu">☰</button><a class="logo" href="#home"><span class="logo-mark">B</span><i class="wm">bill<span>ora</span></i></a><div class="hr"><button class="ib" onclick="toggleTheme()" aria-label="Theme">◐</button><button class="ib" onclick="go('settings')" aria-label="Settings">⚙</button></div></header>
+<main id="app"></main><nav id="nav"></nav><div class="ov" id="ov" onclick="closeAll()"></div><aside id="drawer"></aside><div id="sheet"><div class="grab"></div><div id="sheet-body"></div></div><div id="toast"></div><div id="printarea"></div>
+<script src="js/core.js"></script><script src="js/print.js"></script><script src="js/billing.js"></script><script src="js/catalog.js"></script><script src="js/stock.js"></script><script src="js/people.js"></script><script src="js/reports.js"></script><script src="js/settings.js"></script><script src="js/boot.js"></script></body></html>

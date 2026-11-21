@@ -1,0 +1,24 @@
+/* Billora POS — extra components on top of Nanu Cart theme */
+body{padding-bottom:130px}main{max-width:980px;padding-bottom:26px}
+.logo-mark{width:35px;height:35px;border-radius:12px;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 17px Sora}.logo span{color:var(--b)}
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0 14px}.pagehead h1{font-size:clamp(22px,5vw,28px)}.pagehead p{font-size:13px;color:var(--mut)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{padding:16px;border-radius:21px;background:var(--sf);border:1px solid var(--ln);box-shadow:var(--sh)}.stat small{color:var(--mut);font-size:12px}.stat strong{display:block;font:700 21px Sora;margin:6px 0 0}
+.panel{padding:18px;margin:14px 0}.panel h3{font-size:16px;margin-bottom:10px}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.quick button{padding:15px;border-radius:18px;border:1px solid var(--ln);background:var(--sf);text-align:left;font-weight:700;box-shadow:var(--sh)}.quick b{font-size:22px;display:block;margin-bottom:4px}
+.table-wrap{overflow:auto}.tbl{width:100%;border-collapse:collapse;min-width:520px;font-size:13px}.tbl th{text-align:left;color:var(--mut);font-size:11px;text-transform:uppercase;padding:10px;border-bottom:1px solid var(--ln)}.tbl td{padding:12px 10px;border-bottom:1px solid var(--ln)}
+.pill{display:inline-flex;padding:4px 10px;border-radius:99px;background:var(--bg2);font-size:11px;font-weight:700}.pill.ok{background:#dcf7e8;color:#137b43}.pill.low{background:#fff0d4;color:#986000}.pill.bad{background:#ffe1e1;color:#a12b2b}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.muted{color:var(--mut)}.hide{display:none!important}.danger{color:var(--bad)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.fg .full{grid-column:1/-1}.lb{font-size:12px;font-weight:700;color:var(--mut);display:block;margin:2px 0 6px}
+.pos .pc .pb h4{font-size:13.5px;margin:2px 0 8px;min-height:2.6em}.pos .pc .pi{aspect-ratio:4/3}.pos .grid{grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}.quick{grid-template-columns:repeat(4,1fr)}.pos .grid{grid-template-columns:repeat(4,1fr)}}
+.stkb{position:absolute;right:8px;top:8px;background:var(--glass);border-radius:99px;padding:3px 9px;font:700 10.5px Sora}
+.cartbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(100px + env(safe-area-inset-bottom,0px));width:min(92%,500px);z-index:39;display:flex;justify-content:space-between;align-items:center;background:var(--grad);color:#fff;padding:14px 18px;border-radius:20px;box-shadow:var(--sh2);font-weight:700;cursor:pointer}
+.cl{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--ln)}.cl .fl small{color:var(--mut)}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}.seg button{padding:10px 16px;border-radius:99px;border:1px solid var(--ln);background:var(--sf);font-weight:700;font-size:13px}.seg .on{background:var(--grad);color:#fff;border-color:transparent}
+.emptybox{text-align:center;padding:30px 12px;color:var(--mut)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.acts .btn{flex:1}
+#printarea{display:none}
+@media print{body>*:not(#printarea){display:none!important}body{background:#fff;padding:0}#printarea{display:block;color:#000}.pg{page-break-after:always}}
+.rc{font-family:'Courier New',monospace;color:#000;background:#fff;margin:0 auto}.rc h2{text-align:center;font-size:1.3em;margin:0}.rc .c{text-align:center}.rc hr{border:0;border-top:1px dashed #000;margin:5px 0}
+.rc table{width:100%;border-collapse:collapse}.rc td,.rc th{padding:2px 0;text-align:left;vertical-align:top}.rc .r{text-align:right}.rc .t{font-weight:bold;font-size:1.15em}
+.rc.a4{font-family:Arial,sans-serif;max-width:720px;font-size:13px}.rc.a4 td,.rc.a4 th{padding:8px;border-bottom:1px solid #ddd}.rc.a4 h2{text-align:left;font-size:24px}
