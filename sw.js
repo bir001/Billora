@@ -1,3 +1,4 @@
-const C='billora-v2',F=['./','index.html','style.css','pos.css','core.js','barcode.js','print.js','billing.js','catalog.js','stock.js','returns.js','kot.js','people.js','reports.js','settings.js','cloud.js','boot.js','manifest.json'];
+const C='billora-v3',F=['./','index.html','style.css','pos.css','icons.js','core.js','barcode.js','thermal.js','print.js','billing.js','catalog.js','stock.js','returns.js','kot.js','people.js','reports.js','settings.js','pwa.js','boot.js','manifest.json','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(F)))});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||!e.request.url.startsWith(self.location.origin))return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{if(r.ok&&e.request.url.startsWith(self.location.origin)){const c=r.clone();caches.open(C).then(x=>x.put(e.request,c))}return r}).catch(()=>caches.match(e.request)))});
