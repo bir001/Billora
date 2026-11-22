@@ -20,7 +20,7 @@ function openSheet(h){$('#sheet-body').innerHTML=`<button class="sx" onclick="cl
 function closeAll(){$$('video').forEach(v=>{v.srcObject&&v.srcObject.getTracks().forEach(t=>t.stop());v.remove()});$('#sheet').classList.remove('open');$('#drawer').classList.remove('open');$('#ov').classList.remove('on')}
 const curTheme=()=>document.documentElement.dataset.theme||'royal';
 function openDrawer(){const c=curTheme();
- $('#drawer').innerHTML=`<div class="dh"><div class="logo"><span class="logo-mark">B</span><i class="wm">bill<span>ora</span></i></div><button class="ib" onclick="closeAll()">${I('x',20)}</button></div>
+ $('#drawer').innerHTML=`<div class="dh"><div class="logo"><img class="lg-img" src="logo-sm.png" alt="Billora"><i class="wm">bill<span>ora</span></i></div><button class="ib" onclick="closeAll()">${I('x',20)}</button></div>
  <a class="dme" onclick="newBillGo()">${I('plus',22)}<div>New Bill<small>Start touch billing</small></div></a>
  <h5>Theme • ${THEMES.length} available</h5><div class="dth">${THEMES.map(t=>`<button class="${t[0]===c?'on':''}" onclick="setTheme('${t[0]}')"><i style="--c:${t[2]};--bgc:${t[3]}">${t[0]===c?I('check',16):''}</i><span>${t[1]}</span></button>`).join('')}</div>
  <h5>Menu</h5>${MENU.map(m=>`<a onclick="go('${m[0]}')">${I(m[1],21)} ${m[2]}</a>`).join('')}`;
