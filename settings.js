@@ -1,6 +1,6 @@
 /* SETTINGS: business, barcode on/off, bill format, printer connection, backup */
 const CONNS=[['rawbt','zap','RawBT app — instant, any printer','Bluetooth (classic/BLE), USB and LAN / Wi-Fi printers. Install the free RawBT app once, add your printer in it, then Billora prints in one tap.'],
- ['bt','bt','Direct Bluetooth (BLE)','Pair a BLE thermal printer here, no extra app. Chrome on Android.'],
+ ['bt','bt','Direct Bluetooth (BLE)','Pair a BLE thermal printer. Chrome shows its own pairing window with the website name. For a pairing list inside the app, use the Billora Android app.'],
  ['usb','usb','Direct USB (OTG)','Connect with an OTG cable and pair here. Chrome on Android / desktop.'],
  ['browser','wifi','System print dialog','Any printer installed on the phone or PC: LAN, Wi-Fi, USB, Bluetooth. Shows the print screen each time.']];
 V.settings=()=>{const s=DB.d.set,t=(k,l,ty='text')=>`<div class="full"><label class="lb">${l}</label><input type="${ty}" value="${esc(s[k])}" onchange="setK('${k}',this.type==='number'?+this.value:this.value)"></div>`,
