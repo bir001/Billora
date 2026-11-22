@@ -10,7 +10,7 @@ const Paper={
  label(){const s=DB.d.set;return FMT[s.paper]+(s.paper==='custom'?' '+this.mm()+'mm':'')}
 };
 const SAMPLE={no:101,t:Date.now(),cust:'Ravi',phone:'',items:[{name:'Rice 1kg',qty:1,price:60,gst:5},{name:'Biscuit Pack',qty:2,price:10,gst:12},{name:'Cold Drink',qty:3,price:40,gst:18}],sub:200,disc:0,tax:16.4,total:216,pay:'Cash'};
-const Print={
+const Print={busy:0,
  /* ---- neutral line model: text | LR | hr | cols ---- */
  model(b,kot,sym,tpl){const s=DB.d.set,tp=tpl||s.tpl,m=[],T=(t,al=0,bd=0,sz=0)=>m.push({t:String(t),al,bd,sz}),LR=(l,r,bd=0,sz=0,fill)=>m.push({l:String(l),r:String(r),bd,sz,fill}),H=()=>m.push({hr:1}),C=(c,bd=0)=>m.push({cols:c.map(x=>({t:String(x[0]),w:x[1],a:x[2]})),bd}),f=x=>(+x).toFixed(2);
   T(kot?'KOT':s.name,1,1,1);

@@ -30,6 +30,12 @@ const IC={
  rupee:'<path d="M7 5h10M7 9h10M7.5 5c4.8 0 6.5 2 6.5 4s-1.700 4-6.500 4L15 19.500"/>',
  wifi:'<path d="M2.5 9.5a14 14 0 0119 0M5.5 13a9.5 9.5 0 0113 0M8.7 16.3a5 5 0 016.6 0"/><circle cx="12" cy="19.5" r="1"/>',
  zap:'<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 20.5c0-4 3.6-6 8-6s8 2 8 6"/>',
+ cloud:'<path d="M7 18a4.5 4.5 0 01-.7-8.95A6 6 0 0118 10.5 3.75 3.75 0 0117.5 18z"/>',
+ crown:'<path d="M4 18L3 8.5l5 4L12 5l4 7.5 5-4L20 18z"/><path d="M5 21h14"/>',
+ lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+ list:'<path d="M8.5 6H20M8.5 12H20M8.5 18H20M4 6h.01M4 12h.01M4 18h.01"/>',
+ grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>',
  alert:'<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.4v.1"/>'
 };
 const I=(n,s=22)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;

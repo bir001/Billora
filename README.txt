@@ -25,3 +25,5 @@ NOTES
 - Browsers cannot open raw LAN sockets, so LAN printers print through RawBT (add the LAN printer inside RawBT) or the system print dialog.
 - Direct printing needs Chrome. Bluetooth must be a BLE-capable printer; USB needs an OTG cable.
   Otherwise choose "System" print and use your printer's Android print service.
+
+CLOUD / PLANS (new): see FIREBASE-SETUP.txt. Files: firebase-config.js, cloud.js, account.js, admin.html, admin.js, firestore.rules.

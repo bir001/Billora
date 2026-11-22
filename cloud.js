@@ -1,56 +1,92 @@
-/* CLOUD: Supabase login, roles, record-level sync (stock/due as movements) */
+/* CLOUD: Firebase login, subscription state, branches, offline-first sync (per-record + stock/due movements) */
 const COLS=['prods','custs','sups','bills','buys','rets','prets','kots'];
-const Cloud={sb:null,on:false,gate:false,bid:'',user:null,prof:null,_t:null,_busy:false,_again:false,_chg:false,_ch:null,
- cfg(){return{url:localStorage.getItem('bl_url')||'',key:localStorage.getItem('bl_key')||''}},
- save(){localStorage.setItem('bl_url',$('#cu').value.trim());localStorage.setItem('bl_key',$('#ck').value.trim());location.reload()},
+const Sub={
+ cache(){try{return JSON.parse(localStorage.getItem('bl_sub'))}catch(e){return null}},
+ plans(){try{const p=JSON.parse(localStorage.getItem('bl_plans'));if(p&&p.length)return p}catch(e){}return DEFAULT_PLANS},
+ plan(){const s=this.cache();return s&&this.plans().find(p=>p.id===s.plan)},
+ state(){const s=this.cache();if(!s)return{k:'none'};if(s.status==='suspended')return{k:'suspended'};const now=Date.now();
+  if(now<=s.accessUntil){const left=Math.max(0,Math.ceil(((s.plan==='trial'?s.trialEnds:s.planEnds)-now)/864e5));return{k:s.plan==='trial'?'trial':'active',left,plan:s.plan,grace:left===0&&(s.plan==='trial'?s.trialEnds:s.planEnds)<now}}
+  return{k:'expired'}},
+ limit(){const s=this.state();if(s.k==='trial')return{branches:3,cloud:true};const p=this.plan();return{branches:p?p.limits.branches:1,cloud:p?p.cloud!==false:false}},
+ label(){const s=this.state(),p=this.plan();return s.k==='trial'?'Free trial':s.k==='active'?(p?p.name:'Active'):s.k==='expired'?'Expired':s.k==='suspended'?'Suspended':'—'}
+};
+const Branch={cur:localStorage.getItem('bl_branch')||'main',
+ list(){const p=Cloud.prof;return(p&&p.branches&&p.branches.length)?p.branches:[{id:'main',name:'Main branch'}]},
+ name(){const b=this.list().find(x=>x.id===this.cur);return b?b.name:'Main branch'},
+ go(id){localStorage.setItem('bl_branch',id);localStorage.removeItem('billora_tabs');location.reload()},
+ async add(){const n=(prompt('Branch name?')||'').trim();if(!n)return;if(this.list().length>=Sub.limit().branches)return toast('Branch limit reached — upgrade your plan');
+  try{await Cloud.db.doc('users/'+Cloud.user.uid).update({branches:[...this.list(),{id:'b'+uid(),name:n}]});toast('Branch added');}catch(e){toast('Could not add branch')}}
+};
+const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db:null,auth:null,isAdmin:false,msg:'',_t:null,_busy:false,_again:false,_chg:false,_un:null,
  ui(t){const e=$('#cs');if(e)e.textContent=t},
+ tm(p,ms=12000){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])},
+ blocked(){if(!this.enabled)return false;const k=Sub.state().k;return k==='expired'||k==='suspended'},
  form(k,o){const x={...o};if(k==='prods')delete x.stock;if(k==='custs')delete x.due;return x},
- async init(){const c=this.cfg();if(!c.url||!c.key||!window.supabase)return;this.sb=supabase.createClient(c.url,c.key);
-  const {data}=await this.sb.auth.getSession();if(data.session)await this.attach(data.session.user);else this.gate='login'},
- async attach(u){let {data:p}=await this.sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
-  if(!p){const m=u.user_metadata||{},code=(m.code||'').trim(),nm=m.name||u.email,row=code?{id:u.id,business_id:code,name:nm,role:'pending'}:{id:u.id,business_id:u.id,name:nm,role:'owner'};
-   const r=await this.sb.from('profiles').insert(row).select().single();if(r.error){toast(r.error.message);this.gate='login';return}p=r.data}
-  this.user=u;this.prof=p;if(p.role==='pending'){this.gate='wait';return}
-  ME={name:p.name,role:p.role};this.bid=p.business_id;this.on=true;this.gate=false;await this.link();this.listen();setInterval(()=>this.touch(0),30000);this.touch(100)},
- async link(){const D=DB.d;if(D.sy.bid===this.bid)return;
-  const r=await this.sb.from('records').select('id',{count:'exact',head:true}).eq('business_id',this.bid);
-  if(r.count>0)DB.d=Object.assign(structuredClone(DEF),{dev:D.dev,did:D.did,set:D.set});
-  DB.d.sy=structuredClone(DEF.sy);DB.d.sy.bid=this.bid;localStorage.setItem(DB.k,JSON.stringify(DB.d))},
- apply(r){const D=DB.d,sy=D.sy,k=r.kind+':'+r.id;this._chg=true;
-  if(r.kind==='mv'){if(sy.seen[r.id]||r.id.startsWith(D.did))return;sy.seen[r.id]=1;const x=r.data,stk=x.t==='stk',o=(stk?D.prods:D.custs).find(z=>z.id===x.ref),fld=stk?'stock':'due';
-   if(o){o[fld]=(o[fld]||0)+x.d;sy[x.t][o.id]=(sy[x.t][o.id]||0)+x.d}return}
-  if(r.kind==='cfg'){if(r.id==='set'){D.set=Object.assign({},DEF.set,r.data);sy.h[k]=JSON.stringify(D.set)}else{D.cats=r.data||[];sy.h[k]=JSON.stringify(D.cats)}return}
-  const l=D[r.kind];if(!l)return;const i=l.findIndex(z=>z.id===r.id);
-  if(r.deleted){if(i>=0)l.splice(i,1);sy.h[k]='x';return}
-  const old=i>=0?l[i]:null,o={...r.data};if(r.kind==='prods'){o.stock=old?old.stock:0;if(!old)sy.stk[o.id]=0}if(r.kind==='custs'){o.due=old?old.due:0;if(!old)sy.due[o.id]=0}
-  i>=0?l[i]=o:l.push(o);sy.h[k]=JSON.stringify(this.form(r.kind,o))},
- async pull(){const sy=DB.d.sy;for(let g=0;g<20;g++){const from=sy.since?new Date(Date.parse(sy.since)-5000).toISOString():'1970-01-01T00:00:00Z';
-  const {data,error}=await this.sb.from('records').select('*').eq('business_id',this.bid).gte('updated_at',from).order('updated_at').limit(1000);if(error)throw error;
-  data.sort((a,b)=>(a.kind==='mv')-(b.kind==='mv')).forEach(r=>this.apply(r));if(data.length)sy.since=data.reduce((m,r)=>r.updated_at>m?r.updated_at:m,sy.since||'');if(data.length<1000)break}
-  ['bills','buys','rets','prets','kots'].forEach(c=>DB.d[c].sort((a,b)=>b.t-a.t))},
- async push(){const D=DB.d,sy=D.sy,out=[],commit=[];
-  const put=(kind,id,data,del)=>{const k=kind+':'+id,h=del?'x':JSON.stringify(data);if(sy.h[k]===h)return;out.push({business_id:this.bid,kind,id,data:del?null:data,deleted:!!del});commit.push(()=>{sy.h[k]=h})};
+ async init(){if(!FIREBASE_CONFIG.apiKey)return;this.enabled=true;
+  if(!window.firebase){const c=localStorage.getItem('bl_prof');if(c){this.prof=JSON.parse(c);ME.name=this.prof.name||'Owner';return}this.gate='login';this.msg='Internet is needed for the first login.';return}
+  firebase.initializeApp(FIREBASE_CONFIG);this.auth=firebase.auth();this.db=firebase.firestore();
+  const u=await new Promise(res=>{const un=this.auth.onAuthStateChanged(x=>{un();res(x)})});
+  if(!u){this.gate='login';return}
+  this.user=u;await this.profile();if(this.gate)return;
+  this.on=true;this.listenProfile();this.isAdmin=await this.tm(this.db.doc('admins/'+u.uid).get(),5000).then(s=>s.exists).catch(()=>false);
+  this.loadPlans();setInterval(()=>this.beat(),600000);this.beat();
+  if(Sub.limit().cloud&&!this.blocked())await this.startSync().catch(e=>console.warn(e))},
+ async profile(){const ref=this.db.doc('users/'+this.user.uid);let d=null;
+  try{const s=await this.tm(ref.get(),6000);d=s.exists?s.data():null;
+   if(!s.exists){const m=JSON.parse(localStorage.getItem('bl_pending')||'{}'),now=Date.now(),ends=now+TRIAL_DAYS*864e5;
+    d={email:this.user.email,name:m.name||this.user.email.split('@')[0],phone:m.phone||'',shop:m.shop||'',createdAt:now,plan:'trial',status:'trial',trialEnds:ends,planEnds:0,accessUntil:ends,branches:[{id:'main',name:'Main branch'}],lead:{status:'new',note:''},lastActive:now,stats:{bills:0}};
+    await this.tm(ref.set(d),8000);localStorage.removeItem('bl_pending')}}
+  catch(e){const c=localStorage.getItem('bl_prof');if(c)d=JSON.parse(c);else{this.gate='login';this.msg='Could not load your account. Check internet.';return}}
+  this.setProf(d)},
+ setProf(d){this.prof=d;ME.name=d.name||'Owner';localStorage.setItem('bl_prof',JSON.stringify(d));
+  localStorage.setItem('bl_sub',JSON.stringify({plan:d.plan,status:d.status,accessUntil:d.accessUntil,planEnds:d.planEnds,trialEnds:d.trialEnds,v:Date.now()}));
+  if(!d.branches.some(b=>b.id===Branch.cur)){Branch.cur='main';localStorage.setItem('bl_branch','main')}},
+ listenProfile(){let first=true;this.db.doc('users/'+this.user.uid).onSnapshot(s=>{if(!s.exists)return;const was=JSON.stringify(Sub.state());this.setProf(s.data());
+  if(first){first=false;return}if(was!==JSON.stringify(Sub.state()))location.reload();else if(!/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||''))render()},()=>{})},
+ async loadPlans(){try{const q=await this.tm(this.db.collection('plans').get(),6000);const l=q.docs.map(d=>({id:d.id,...d.data()}));if(l.length)localStorage.setItem('bl_plans',JSON.stringify(l.sort((a,b)=>(a.m||0)-(b.m||0))))}catch(e){}},
+ beat(){if(!navigator.onLine||!this.on)return;this.db.doc('users/'+this.user.uid).update({lastActive:Date.now(),stats:{bills:DB.d.bills.length,items:DB.d.prods.length},ua:(navigator.userAgent||'').slice(0,90)}).catch(()=>{})},
+ /* ---------- auth ---------- */
+ err(e){const m={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/email-already-in-use':'This email already has an account — log in','auth/weak-password':'Password must be at least 6 characters','auth/invalid-email':'Enter a valid email','auth/network-request-failed':'No internet connection','auth/too-many-requests':'Too many tries, wait a few minutes'};return m[e.code]||e.message||'Something went wrong'},
+ async login(){try{await this.auth.signInWithEmailAndPassword($('#ae').value.trim(),$('#ap').value);location.hash='#home';location.reload()}catch(e){toast(this.err(e))}},
+ async signup(){const n=$('#an').value.trim(),sh=$('#as').value.trim(),ph=$('#aph').value.trim();if(!n||!sh)return toast('Enter your name and shop name');
+  localStorage.setItem('bl_pending',JSON.stringify({name:n,shop:sh,phone:ph}));try{await this.auth.createUserWithEmailAndPassword($('#ae').value.trim(),$('#ap').value);location.hash='#home';location.reload()}catch(e){toast(this.err(e))}},
+ async reset(){const e=$('#ae').value.trim();if(!e)return toast('Type your email first');try{await this.auth.sendPasswordResetEmail(e);toast('Password reset email sent')}catch(x){toast(this.err(x))}},
+ async logout(){if(!confirm('Log out of Billora?'))return;try{await this.auth.signOut()}catch(e){}['bl_prof','bl_sub','bl_branch'].forEach(k=>localStorage.removeItem(k));location.reload()},
+ mode:'login',
+ screen(){$('#nav').innerHTML='';const m=this.mode,su=m==='signup';
+  $('#app').innerHTML=`<div class="card auth2"><div style="text-align:center"><img src="logo.png" alt="Billora" style="width:110px;margin:0 auto 6px"><h2>${su?'Start your free trial':'Welcome back'}</h2><p class="mut">${su?TRIAL_DAYS+' days free • no card needed':'Log in to your Billora account'}</p></div>${this.msg?`<p class="danger" style="font-size:13px">${esc(this.msg)}</p>`:''}
+  ${su?`<input id="an" placeholder="Your name" autocomplete="name"><input id="as" placeholder="Shop / business name"><input id="aph" type="tel" inputmode="numeric" placeholder="Mobile number (optional)">`:''}
+  <input id="ae" type="email" placeholder="Email" autocomplete="email"><input id="ap" type="password" placeholder="Password" autocomplete="${su?'new-password':'current-password'}">
+  <button class="btn b w" onclick="Cloud.${su?'signup':'login'}()">${su?'Create account':'Log in'}</button>
+  ${su?'':'<button class="btn o w" onclick="Cloud.reset()">Forgot password?</button>'}
+  <p style="text-align:center;margin-top:14px;font-size:14px">${su?'Already have an account?':'New to Billora?'} <b style="color:var(--b);cursor:pointer" onclick="Cloud.mode='${su?'login':'signup'}';Cloud.screen()">${su?'Log in':'Start free trial'}</b></p></div>`},
+ /* ---------- sync ---------- */
+ base(){return this.db.collection('users').doc(this.user.uid).collection('br').doc(Branch.cur).collection('rec')},
+ async startSync(){const D=DB.d,key=this.user.uid+'/'+Branch.cur;
+  if(D.sy.bid!==key){const q=await this.tm(this.base().limit(1).get(),10000);if(q.size>0)DB.d=Object.assign(structuredClone(DEF),{did:D.did});DB.d.sy=structuredClone(DEF.sy);DB.d.sy.bid=key;DB.raw()}
+  this.sync=true;this.listen();window.addEventListener('online',()=>this.touch(300));this.touch(500)},
+ apply(r){const D=DB.d,sy=D.sy,k=r.k+':'+r.i;this._chg=true;
+  if(r.k==='mv'){if(sy.seen[r.i]||r.i.startsWith(D.did))return;sy.seen[r.i]=1;const x=r.d,stk=x.t==='stk',o=(stk?D.prods:D.custs).find(z=>z.id===x.ref),f=stk?'stock':'due';if(o){o[f]=(o[f]||0)+x.d;sy[x.t][o.id]=(sy[x.t][o.id]||0)+x.d}return}
+  if(r.k==='cfg'){const cur=JSON.stringify(r.i==='set'?D.set:D.cats);if(sy.h[k]!==undefined&&sy.h[k]!==cur)return;if(r.i==='set'){D.set=Object.assign({},DEF.set,r.d);sy.h[k]=JSON.stringify(D.set)}else{D.cats=r.d||[];sy.h[k]=JSON.stringify(D.cats)}return}
+  const l=D[r.k];if(!l)return;const i=l.findIndex(z=>z.id===r.i),old=i>=0?l[i]:null;
+  if(old&&sy.h[k]!==undefined&&sy.h[k]!==JSON.stringify(this.form(r.k,old)))return;
+  if(r.x){if(i>=0)l.splice(i,1);sy.h[k]='x';return}
+  const o={...r.d};if(r.k==='prods'){o.stock=old?old.stock:0;if(!old)sy.stk[o.id]=0}if(r.k==='custs'){o.due=old?old.due:0;if(!old)sy.due[o.id]=0}
+  i>=0?l[i]=o:l.push(o);sy.h[k]=JSON.stringify(this.form(r.k,o))},
+ listen(){if(this._un)this._un();const sy=DB.d.sy,from=firebase.firestore.Timestamp.fromMillis(Math.max(0,(sy.since||0)-5000));
+  this._un=this.base().where('u','>=',from).orderBy('u').onSnapshot(snap=>{const rows=[];snap.docChanges().forEach(c=>{if(c.type!=='removed'&&!c.doc.metadata.hasPendingWrites)rows.push(c.doc.data())});
+   if(!rows.length)return;this._chg=false;rows.sort((a,b)=>(a.k==='mv')-(b.k==='mv')).forEach(r=>this.apply(r));
+   rows.forEach(r=>{const t=r.u&&r.u.toMillis?r.u.toMillis():0;if(t>sy.since)sy.since=t});['bills','buys','rets','prets','kots'].forEach(c=>DB.d[c].sort((a,b)=>b.t-a.t));DB.raw();
+   if(this._chg&&!$('#sheet.open')&&!/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||''))render()},e=>console.warn(e))},
+ async push(){const D=DB.d,sy=D.sy,out=[],commit=[],T=firebase.firestore.FieldValue.serverTimestamp;
+  const put=(k,i,d,x)=>{const h=x?'x':JSON.stringify(d),key=k+':'+i;if(sy.h[key]===h)return;out.push({k,i,d:x?null:JSON.parse(h),x:!!x});commit.push(()=>{sy.h[key]=h})};
   COLS.forEach(c=>{const live={};D[c].forEach(o=>{live[o.id]=1;put(c,o.id,this.form(c,o))});Object.keys(sy.h).forEach(k=>{if(k.startsWith(c+':')){const id=k.slice(c.length+1);if(!live[id]&&sy.h[k]!=='x')put(c,id,null,true)}})});
   put('cfg','set',D.set);put('cfg','cats',D.cats);
-  [['prods','stk','stock'],['custs','due','due']].forEach(([c,f,fld])=>D[c].forEach(o=>{const cur=o[fld]||0,base=sy[f][o.id]||0,d=cur-base;if(d){const id=D.did+'_'+o.id+'_'+base+'_'+cur;out.push({business_id:this.bid,kind:'mv',id,data:{t:f,ref:o.id,d}});commit.push(()=>{sy.seen[id]=1;sy[f][o.id]=base+d})}}));
-  if(!out.length)return;for(let i=0;i<out.length;i+=200){const r=await this.sb.from('records').upsert(out.slice(i,i+200),{onConflict:'business_id,kind,id'});if(r.error)throw r.error}
+  [['prods','stk','stock'],['custs','due','due']].forEach(([c,f,fld])=>D[c].forEach(o=>{const cur=o[fld]||0,base=sy[f][o.id]||0,d=cur-base;if(d){const id=D.did+'_'+o.id+'_'+base+'_'+cur;out.push({k:'mv',i:id,d:{t:f,ref:o.id,d}});commit.push(()=>{sy.seen[id]=1;sy[f][o.id]=base+d})}}));
+  if(!out.length)return;for(let n=0;n<out.length;n+=400){const b=this.db.batch();out.slice(n,n+400).forEach(o=>b.set(this.base().doc(o.k+'__'+o.i),{k:o.k,i:o.i,d:o.d,x:o.x,u:T()}));await this.tm(b.commit(),25000)}
   commit.forEach(f=>f())},
- touch(ms=1500){if(!this.on)return;clearTimeout(this._t);this._t=setTimeout(()=>this.sync(),ms)},
- async sync(){if(this._busy){this._again=true;return}this._busy=true;this._chg=false;this.ui('⟳ sync');
-  try{await this.pull();await this.push();localStorage.setItem(DB.k,JSON.stringify(DB.d));this.ui('☁ ✓');
-   if(this._chg&&!$('#sheet.open')&&!/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||''))render()}catch(e){console.warn(e);this.ui('☁ ✗')}
-  this._busy=false;if(this._again){this._again=false;this.touch(500)}},
- listen(){if(this._ch)return;this._ch=this.sb.channel('rec').on('postgres_changes',{event:'*',schema:'public',table:'records',filter:'business_id=eq.'+this.bid},()=>this.touch(400)).subscribe()},
- screen(){const a=$('#app');if(this.gate==='wait')return a.innerHTML=`<div class="card auth2"><h2>Approval pending</h2><p class="mut">Owner aapko Staff & Users se role dega, uske baad login chalega.</p><button class="btn b w" onclick="location.reload()">Check again</button><button class="btn o w" onclick="Cloud.logout()">Logout</button></div>`;
-  a.innerHTML=`<div class="card auth2"><h2>Billora Login</h2><p class="mut">Apna account use karo</p><input id="ae" type="email" placeholder="Email"><input id="ap" type="password" placeholder="Password"><button class="btn b w" onclick="Cloud.login()">Login</button>
-  <p class="mut" style="margin-top:18px"><b>Naya account</b></p><input id="an" placeholder="Aapka naam"><input id="ac" placeholder="Business code (sirf staff ke liye)"><button class="btn o w" onclick="Cloud.signup()">Sign up</button><button class="btn o w" onclick="Cloud.local()">Cloud ke bina chalao</button></div>`},
- local(){localStorage.removeItem('bl_url');localStorage.removeItem('bl_key');location.reload()},
- async login(){const r=await this.sb.auth.signInWithPassword({email:$('#ae').value.trim(),password:$('#ap').value});if(r.error)return toast(r.error.message);await this.attach(r.data.user);location.hash='home';render()},
- async signup(){const r=await this.sb.auth.signUp({email:$('#ae').value.trim(),password:$('#ap').value,options:{data:{name:$('#an').value.trim(),code:$('#ac').value.trim()}}});
-  if(r.error)return toast(r.error.message);if(r.data.session){await this.attach(r.data.user);render()}else toast('Email confirm karo, phir login')},
- async logout(){await this.sb.auth.signOut();location.reload()},
- async role(id,role){const r=await this.sb.from('profiles').update({role}).eq('id',id);toast(r.error?r.error.message:'Role updated')}
+ touch(ms=1500){if(!this.sync)return;clearTimeout(this._t);this._t=setTimeout(()=>this.run(),ms)},
+ async run(){if(this._busy){this._again=true;return}if(!navigator.onLine){this.ui('Offline');return}this._busy=true;this.ui('Syncing…');
+  try{await this.push();DB.raw();this.ui('Synced ✓')}catch(e){console.warn(e);this.ui('Sync paused')}this._busy=false;if(this._again){this._again=false;this.touch(500)}}
 };
-V.staff=()=>`<div class="pagehead"><div><h1>Staff & Users</h1><p>${Cloud.on?'Business code: <b>'+Cloud.bid+'</b>':'Cloud login ke baad users dikhenge'}</p></div></div><div id="stl" class="list"></div><p class="muted" style="font-size:12px;margin-top:12px">Staff signup ke time ye Business code daale, phir yaha se role (manager / cashier / staff) do.</p>`;
-AFTER.staff=async()=>{if(!Cloud.on)return;const {data}=await Cloud.sb.from('profiles').select('*').eq('business_id',Cloud.bid);
- $('#stl').innerHTML=(data||[]).map(p=>`<div class="card li"><div class="fl"><h4>${esc(p.name)}</h4></div>${p.id===Cloud.user.id?'<span class="pill ok">owner (you)</span>':`<select style="width:auto;margin:0" onchange="Cloud.role('${p.id}',this.value)">${['pending','manager','cashier','staff'].map(r=>`<option ${r===p.role?'selected':''}>${r}</option>`).join('')}</select>`}</div>`).join('')};
+window.addEventListener('offline',()=>Cloud.ui&&Cloud.ui('Offline'));

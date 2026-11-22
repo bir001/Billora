@@ -80,3 +80,14 @@ body.kb .chk,body.kb nav,body.kb #inst{display:none!important}
 #drawer .dh .logo{gap:8px}
 .lg-tile{width:42px;height:42px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none}.lg-tile img{width:32px;height:32px;object-fit:contain}
 .about{text-align:center;color:var(--mut);font-size:12px;padding:18px 0 4px}.about img{width:56px;height:56px;object-fit:contain;margin:0 auto 6px}
+/* ---- v7: account, plans, auth ---- */
+.avt{width:34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:700 15px Sora}.avt.big{width:56px;height:56px;font-size:24px;background:rgba(255,255,255,.2);flex:none}
+.plan{position:relative;background:var(--sf);border:2px solid var(--ln);border-radius:26px;padding:22px;margin:14px 0;box-shadow:var(--sh)}.plan.pop{border-color:var(--b);box-shadow:var(--sh2)}
+.ribbon{position:absolute;top:-12px;left:22px;background:var(--grad);color:#fff;font:700 11.5px Sora;padding:5px 14px;border-radius:99px}
+.pr2{display:flex;align-items:baseline;gap:8px;margin-top:10px}.pr2 s{color:var(--mut);font-size:16px}.pr2 b{font:800 40px Sora}.pr2 span{color:var(--mut)}
+.feat div{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:14px}.feat svg{color:var(--ok);flex:none;margin-top:1px}
+.busy,.btn.busy{background:#16a34a!important;color:#fff!important;border-color:transparent!important;opacity:1!important}
+.tg{display:inline-flex;padding:3px 9px;border-radius:99px;font:700 10.5px Sora}.tg.c{background:#ffe1e1;color:#a12b2b}.tg.r{background:#fff0d4;color:#986000}.tg.k{background:#dcf7e8;color:#137b43}
+.chk-row .btn.kb2{padding:0 12px}.bsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.bsum div{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:10px;text-align:center}.bsum small{display:block;color:var(--mut);font-size:11px}.bsum b{font:700 15px Sora}
+.vt{display:flex;gap:6px;margin:0 0 10px}.vt button{flex:1;padding:9px 4px;border-radius:12px;border:1.5px solid var(--ln);background:var(--sf);font-weight:700;font-size:12.5px;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:5px}.vt .on{background:var(--grad);color:#fff;border-color:transparent}
+.gh{font:700 13px Sora;color:var(--mut);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.05em}
