@@ -16,7 +16,7 @@ const Thermal={dev:null,ch:null,usb:null,ep:null,
    if(navigator.bluetooth&&navigator.bluetooth.getDevices){const l=await navigator.bluetooth.getDevices();if(l[0])return this.openBT(l[0])}return this.pairBT()}
   if(c==='usb'){if(this.usb&&this.usb.opened)return;if(navigator.usb){const l=await navigator.usb.getDevices();if(l[0])return this.openUSB(l[0])}return this.pairUSB()}},
  rawbt(bytes){let bin='';for(let i=0;i<bytes.length;i+=8192)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));location.href='rawbt:base64,'+btoa(bin)},
- async send(bytes){if(DB.d.set.conn==='rawbt')return this.rawbt(bytes);await this.ready();
+ async send(bytes){if(Native.on)return Native.send(bytes);if(DB.d.set.conn==='rawbt')return this.rawbt(bytes);await this.ready();
   if(DB.d.set.conn==='usb'){for(let i=0;i<bytes.length;i+=4096)await this.usb.transferOut(this.ep,bytes.slice(i,i+4096));return}
   const nr=!this.ch.properties.write,n=nr?20:100;
   for(let i=0;i<bytes.length;i+=n){const p=bytes.slice(i,i+n);nr?await this.ch.writeValueWithoutResponse(p):await this.ch.writeValue(p);if(nr)await new Promise(r=>setTimeout(r,12))}},

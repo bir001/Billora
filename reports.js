@@ -29,6 +29,6 @@ V.reports=()=>{const s=summary(span()),R=(l,v)=>`<div class="ln"><span>${l}</spa
  <div class="panel card"><h3>Category-wise</h3>${s.cat.map(c=>R(esc(c[0]),c[1])).join('')||'<p class="muted">No data</p>'}</div>`};
 /* Excel export (SheetJS loaded on demand) */
 function xlsx(){return window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=ok;s.onerror=()=>{toast('Internet chahiye');no()};document.head.appendChild(s)})}
-async function saveX(name,rows){await xlsx();const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Sheet1');XLSX.writeFile(wb,name+'.xlsx')}
+async function saveX(name,rows){await xlsx();const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Sheet1');Save.blob(name+'.xlsx',new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
 function exportSales(){const s=span();saveX('billora-sales',[['Bill','Date','Customer','Payment','Subtotal','Discount','GST','Total','Status']].concat(DB.d.bills.filter(b=>inSpan(b.t,s)).map(b=>[b.no,new Date(b.t).toLocaleString(),b.cust,b.pay,b.sub,b.disc,b.tax,b.total,b.cancelled?'Cancelled':'OK'])))}
 function exportStock(){saveX('billora-stock',[['Product','Category','Barcode','Stock','Cost','Price','Value']].concat(DB.d.prods.map(p=>[p.name,p.cat,p.bc,p.stock,p.cost,p.price,p.stock*p.cost])))}

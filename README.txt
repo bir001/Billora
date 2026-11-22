@@ -15,6 +15,8 @@ FEATURES
 - Reports with custom date range, Excel and PDF export, JSON backup
 - Bill formats: 2 inch, 3 inch, 4 inch, A5, A4 and custom roll width
 - Printing: RawBT app (instant, any Bluetooth / USB / LAN / Wi-Fi printer), direct Bluetooth (BLE), direct USB, or system print dialog. Text and Graphic (Hindi/Kannada) styles
+- 8 bill templates (Classic, One line, Table, Compact, Minimal, GST detail, Bold, Dotted) with live preview
+- Billora Android app (separate zip): in-app Bluetooth / USB / LAN printer search, no URL bar
 - Forms and panels open from the top so the phone keyboard never covers them
 - 6 themes (left menu > Theme), splash screen, offline-ready PWA
 
