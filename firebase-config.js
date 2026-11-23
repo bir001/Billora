@@ -1,8 +1,15 @@
 /* ============ BILLORA CLOUD CONFIG (edit this file) ============
    1) Firebase console > Project settings > Your apps > Web app > copy the config values here.
    2) Leave apiKey empty ("") to run Billora in local-only mode (no login). */
-const FIREBASE_CONFIG={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
-const ADMIN_WHATSAPP="91XXXXXXXXXX";   /* your WhatsApp number with country code, for plan requests */
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyCuave6oZHX6r4BhwYZF9IH_2xMHXrWxRU",
+  authDomain:"billora-5c863.firebaseapp.com",
+  projectId:"billora-5c863",
+  storageBucket:"billora-5c863.firebasestorage.app",
+  messagingSenderId:"1061039120038",
+  appId:"1:1061039120038:web:c4c2b5c489b17d0800de67"
+};
+const ADMIN_WHATSAPP="917052565417";   /* your WhatsApp number with country code, for plan requests */
 const APK_URL="https://github.com/bir001/billora-android/releases/latest/download/app-release.apk";
 /* Optional: Google Sheets / Drive export. Create an OAuth Web client in Google Cloud and paste its Client ID. */
 const GOOGLE_CLIENT_ID="";
