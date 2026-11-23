@@ -24,7 +24,7 @@ function prodSave(id){const D=DB.d,g=k=>($('#pf_'+k)?$('#pf_'+k).value.trim():''
  const old=D.prods.find(x=>x.id===id),bc=g('bc');if(bc&&D.prods.some(x=>x.id!==id&&x.bc===bc))return toast('This barcode is already used by another item');
  const o={name:g('name'),cat:$('#pf_cat').value,price:n('price'),cost:n('cost'),gst:n('gst'),stock:n('stock'),min:n('min'),bc:$('#pf_bc')?bc:(old?old.bc:''),img:g('img')};
  id?Object.assign(old,o):D.prods.push({id:uid(),...o});DB.save();closeAll();render()}
-function prodDel(id){if(!confirm('Delete this item?'))return;DB.d.prods=DB.d.prods.filter(x=>x.id!==id);DB.save();closeAll();render()}
+function prodDel(id){Dlg.confirm('Delete this item?',()=>{DB.d.prods=DB.d.prods.filter(x=>x.id!==id);DB.save();closeAll();render()},{yes:'Delete',danger:1})}
 function catSheet(){openSheet(`<h3>Categories</h3>${DB.d.cats.map((c,i)=>`<div class="cl"><div class="fl">${esc(c)}</div><button class="pill bad" onclick="catDel(${i})">Delete</button></div>`).join('')}<input id="nc" placeholder="New category" style="margin-top:12px"><button class="btn b w" onclick="catAdd()">Add</button>`)}
 function catAdd(){const v=$('#nc').value.trim();if(v&&!DB.d.cats.includes(v)){DB.d.cats.push(v);DB.save()}catSheet()}
 function catDel(i){DB.d.cats.splice(i,1);DB.save();catSheet()}

@@ -34,3 +34,9 @@ function render(){if(typeof Cloud!=='undefined'&&Cloud.gate)return Cloud.screen(
  document.body.classList.toggle('posmode',n==='billing');$('#app').innerHTML=V[n]();(AFTER[n]||(()=>{}))();window.scrollTo(0,0);
  const L=[['home','home','Home'],['products','box','Items'],['billing','plus','New Bill'],['bills','file','Bills'],['reports','chart','Reports']];
  $('#nav').innerHTML=n==='billing'?'':L.map(m=>m[0]==='billing'?`<a class="fab" onclick="newBillGo()" aria-label="New Bill">${I('plus',30)}<span class="lab">New Bill</span></a>`:`<a class="${m[0]===n?'on':''}" onclick="go('${m[0]}')">${I(m[1],22)}<span>${m[2]}</span></a>`).join('')}
+
+/* In-app dialogs (replace browser confirm/prompt so no website address shows) */
+const Dlg={cb:null,
+ confirm(msg,ok,o={}){this.cb=ok;openSheet(`<h3>${esc(o.title||'Please confirm')}</h3><p class="mut" style="margin:6px 0 18px;line-height:1.45">${esc(msg)}</p><div class="acts"><button class="btn o" onclick="closeAll()">Cancel</button><button class="btn ${o.danger?'dng':'b'}" onclick="Dlg.go()">${esc(o.yes||'OK')}</button></div>`)},
+ prompt(title,label,def,ok,btn){this.cb=ok;openSheet(`<h3>${esc(title)}</h3><label class="lb">${esc(label)}</label><input id="dlgin" value="${esc(def)}" onkeydown="if(event.key==='Enter')Dlg.go(1)"><div class="acts"><button class="btn o" onclick="closeAll()">Cancel</button><button class="btn b" onclick="Dlg.go(1)">${esc(btn||'Save')}</button></div>`);setTimeout(()=>{const e=$('#dlgin');e&&e.focus()},350)},
+ go(p){const v=p?($('#dlgin')||{}).value:undefined,f=this.cb;closeAll();this.cb=null;f&&f(v)}};

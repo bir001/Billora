@@ -1,20 +1,12 @@
 /* ============ BILLORA CLOUD CONFIG (edit this file) ============
    1) Firebase console > Project settings > Your apps > Web app > copy the config values here.
    2) Leave apiKey empty ("") to run Billora in local-only mode (no login). */
-const FIREBASE_CONFIG={
-  apiKey: "AIzaSyCuave6oZHX6r4BhwYZF9IH_2xMHXrWxRU",
-  authDomain: "billora-5c863.firebaseapp.com",
-  projectId: "billora-5c863",
-  storageBucket: "billora-5c863.firebasestorage.app",
-  messagingSenderId: "1061039120038",
-  appId: "1:1061039120038:web:c4c2b5c489b17d0800de67"
-};
-
-const ADMIN_WHATSAPP="919076568175";   /* Aapka WhatsApp number */
+const FIREBASE_CONFIG={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
+const ADMIN_WHATSAPP="91XXXXXXXXXX";   /* your WhatsApp number with country code, for plan requests */
 const APK_URL="https://github.com/bir001/billora-android/releases/latest/download/app-release.apk";
 /* Optional: Google Sheets / Drive export. Create an OAuth Web client in Google Cloud and paste its Client ID. */
 const GOOGLE_CLIENT_ID="";
-const TRIAL_DAYS=14,GRACE_DAYS=3;
+const TRIAL_DAYS=3,GRACE_DAYS=3;
 /* Sample plans. Prices are placeholders: change them in Admin > Plans (saved in Firebase). */
 const DEFAULT_PLANS=[
  {id:'starter',name:'Starter',tag:'For a single shop',m:299,y:2399,was:499,limits:{branches:1,devices:1},cloud:false,pop:false,link:'',feat:['Fast touch billing & GST bills','All paper sizes, thermal printing','Barcode scan & labels','Works fully offline','Daily & monthly reports']},

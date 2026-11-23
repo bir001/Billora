@@ -1,4 +1,6 @@
-DB.load();$('#hset').innerHTML=I('user',22);
+DB.load();$('#hset').innerHTML=I('user',22);$('#hmenu').innerHTML=I('menu',22)+'<span>Menu</span>';
+const opens=+(localStorage.getItem('bl_open')||0);localStorage.setItem('bl_open',opens+1);if(opens<6)$('#hmenu').classList.add('pulse');
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 const vv=window.visualViewport,setVh=()=>document.documentElement.style.setProperty('--vh',(vv?vv.height:innerHeight)+'px');
 setVh();vv&&vv.addEventListener('resize',setVh);addEventListener('resize',setVh);
 const isF=t=>t&&/INPUT|TEXTAREA|SELECT/.test(t.tagName);

@@ -6,5 +6,5 @@ function perForm(k,id){const c=DB.d[k].find(x=>x.id===id)||{name:'',phone:''};op
  <div class="acts"><button class="btn b" onclick="perSave('${k}','${id||''}')">Save</button>${c.due>0?`<button class="btn o" onclick="perPay('${k}','${id}')">Receive payment</button>`:''}${id?`<button class="btn o danger" onclick="perDel('${k}','${id}')">Delete</button>`:''}</div>`)}
 function perSave(k,id){const o={name:$('#pn').value.trim(),phone:$('#pp').value.trim()};if(!o.name)return toast('Enter a name');
  id?Object.assign(DB.d[k].find(x=>x.id===id),o):DB.d[k].push({id:uid(),due:0,...o});DB.save();closeAll();render()}
-function perPay(k,id){const c=DB.d[k].find(x=>x.id===id),a=+prompt('Amount received? (due '+c.due+')');if(a>0){c.due=Math.max(0,c.due-a);DB.save();closeAll();render()}}
-function perDel(k,id){if(confirm('Delete?')){DB.d[k]=DB.d[k].filter(x=>x.id!==id);DB.save();closeAll();render()}}
+function perPay(k,id){const c=DB.d[k].find(x=>x.id===id);Dlg.prompt('Receive payment','Amount received (due '+inr(c.due)+')','',v=>{const a=+v;if(a>0){c.due=Math.max(0,c.due-a);DB.save();closeAll();render()}},'Receive')}
+function perDel(k,id){Dlg.confirm('Delete this record?',()=>{DB.d[k]=DB.d[k].filter(x=>x.id!==id);DB.save();closeAll();render()},{yes:'Delete',danger:1})}

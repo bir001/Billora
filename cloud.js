@@ -14,8 +14,7 @@ const Branch={cur:localStorage.getItem('bl_branch')||'main',
  list(){const p=Cloud.prof;return(p&&p.branches&&p.branches.length)?p.branches:[{id:'main',name:'Main branch'}]},
  name(){const b=this.list().find(x=>x.id===this.cur);return b?b.name:'Main branch'},
  go(id){localStorage.setItem('bl_branch',id);localStorage.removeItem('billora_tabs');location.reload()},
- async add(){const n=(prompt('Branch name?')||'').trim();if(!n)return;if(this.list().length>=Sub.limit().branches)return toast('Branch limit reached — upgrade your plan');
-  try{await Cloud.db.doc('users/'+Cloud.user.uid).update({branches:[...this.list(),{id:'b'+uid(),name:n}]});toast('Branch added');}catch(e){toast('Could not add branch')}}
+add(){if(this.list().length>=Sub.limit().branches)return toast('Branch limit reached — upgrade your plan');Dlg.prompt('Add a branch','Branch name','',async n=>{n=(n||'').trim();if(!n)return;try{await Cloud.db.doc('users/'+Cloud.user.uid).update({branches:[...Branch.list(),{id:'b'+uid(),name:n}]});toast('Branch added')}catch(e){toast('Could not add branch')}},'Add branch')}
 };
 const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db:null,auth:null,isAdmin:false,warn:'',msg:'',_t:null,_busy:false,_again:false,_chg:false,_un:null,
  ui(t){const e=$('#cs');if(e)e.textContent=t},
@@ -57,7 +56,8 @@ const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db
  async signup(){const n=$('#an').value.trim(),sh=$('#as').value.trim(),ph=$('#aph').value.trim();if(!n||!sh)return toast('Enter your name and shop name');
   localStorage.setItem('bl_pending',JSON.stringify({name:n,shop:sh,phone:ph}));try{await this.auth.createUserWithEmailAndPassword($('#ae').value.trim(),$('#ap').value);location.hash='#home';location.reload()}catch(e){toast(this.err(e))}},
  async reset(){const e=$('#ae').value.trim();if(!e)return toast('Type your email first');try{await this.auth.sendPasswordResetEmail(e);toast('Password reset email sent')}catch(x){toast(this.err(x))}},
- async logout(){if(!confirm('Log out of Billora?'))return;try{await this.auth.signOut()}catch(e){}['bl_prof','bl_sub','bl_branch'].forEach(k=>localStorage.removeItem(k));location.reload()},
+ logout(){Dlg.confirm('Log out of Billora? You will need to log in again.',()=>this.logoutNow(),{yes:'Log out',danger:1})},
+ async logoutNow(){try{await this.auth.signOut()}catch(e){}['bl_prof','bl_sub','bl_branch'].forEach(k=>localStorage.removeItem(k));location.reload()},
  mode:'login',
  screen(){$('#nav').innerHTML='';const m=this.mode,su=m==='signup';
   $('#app').innerHTML=`<div class="card auth2"><div style="text-align:center"><img src="logo.png" alt="Billora" style="width:110px;margin:0 auto 6px"><h2>${su?'Start your free trial':'Welcome back'}</h2><p class="mut">${su?TRIAL_DAYS+' days free • no card needed':'Log in to your Billora account'}</p></div>${this.msg?`<p class="danger" style="font-size:13px">${esc(this.msg)}</p>`:''}

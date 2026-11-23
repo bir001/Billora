@@ -1,10 +1,14 @@
+let SD={};  /* unsaved settings (shown with the Save changes bar) */
+function draft(k,v){SD[k]=v;const n=Object.keys(SD).length,b=$('#savebar');if(b){b.classList.remove('hide');$('#sbn').textContent=n+' unsaved change'+(n===1?'':'s')}}
+function saveDraft(){Object.assign(DB.d.set,SD);SD={};DB.save();const a=document.activeElement;a&&a.blur&&a.blur();toast('Settings saved');render()}
+function discardDraft(){SD={};render()}
 /* SETTINGS: business, barcode on/off, bill format, printer connection, backup */
 const CONNS=[['rawbt','zap','RawBT app — instant, any printer','Bluetooth (classic/BLE), USB and LAN / Wi-Fi printers. Install the free RawBT app once, add your printer in it, then Billora prints in one tap.'],
  ['bt','bt','Direct Bluetooth (BLE)','Pair a BLE thermal printer. Chrome shows its own pairing window with the website name. For a pairing list inside the app, use the Billora Android app.'],
  ['usb','usb','Direct USB (OTG)','Connect with an OTG cable and pair here. Chrome on Android / desktop.'],
  ['browser','wifi','System print dialog','Any printer installed on the phone or PC: LAN, Wi-Fi, USB, Bluetooth. Shows the print screen each time.']];
-V.settings=()=>{const s=DB.d.set,t=(k,l,ty='text')=>`<div class="full"><label class="lb">${l}</label><input type="${ty}" value="${esc(s[k])}" onchange="setK('${k}',this.type==='number'?+this.value:this.value)"></div>`,
- yn=(k,l)=>`<div class="full"><label class="lb">${l}</label><select onchange="setK('${k}',this.value==='1');render()"><option value="1" ${s[k]?'selected':''}>Enabled</option><option value="0" ${!s[k]?'selected':''}>Disabled</option></select></div>`;
+V.settings=()=>{const s=DB.d.set,v=k=>SD[k]!==undefined?SD[k]:s[k],t=(k,l,ty='text')=>`<div class="full"><label class="lb">${l}</label><input type="${ty}" value="${esc(v(k))}" oninput="draft('${k}',this.type==='number'?+this.value:this.value)"></div>`,
+ yn=(k,l)=>`<div class="full"><label class="lb">${l}</label><select onchange="draft('${k}',this.value==='1')"><option value="1" ${v(k)?'selected':''}>Enabled</option><option value="0" ${!v(k)?'selected':''}>Disabled</option></select></div>`;
  return `<div class="pagehead"><div><h1>Settings</h1><p>Business, bill format and printer</p></div></div>
  <div class="panel card"><h3>Business</h3><div class="fg">${t('name','Business name')}${t('addr','Address')}${t('phone','Mobile')}${t('gstin','GSTIN')}${t('logo','Logo URL')}${yn('gst','GST on bill')}${yn('bcOn','Barcode (scan & labels)')}${yn('kotOn','KOT button on billing screen')}</div></div>
  ${Native.on?nativePrinter(s):browserPrinter(s)}
@@ -13,7 +17,8 @@ V.settings=()=>{const s=DB.d.set,t=(k,l,ty='text')=>`<div class="full"><label cl
  </div></div>
  ${storagePanel()}
  <div class="panel card"><h3>Backup</h3><div class="acts"><button class="btn o" onclick="backup()">${I('down',18)} Export JSON</button><button class="btn o" onclick="$('#imp').click()">Import</button></div><input id="imp" type="file" accept=".json" class="hide" onchange="restore(this.files[0])"></div>
- <div class="about"><img src="logo-sm.png" alt=""><div><b>Billora POS</b> • v1.0</div><div>Fast touch billing & inventory</div></div>`};
+ <div class="about"><img src="logo-sm.png" alt=""><div><b>Billora POS</b> • v1.0</div><div>Fast touch billing & inventory</div></div>
+ <div id="savebar" class="savebar ${Object.keys(SD).length?'':'hide'}"><span id="sbn">${Object.keys(SD).length} unsaved change${Object.keys(SD).length===1?'':'s'}</span><button class="btn o sm" onclick="discardDraft()">Discard</button><button class="btn b" onclick="saveDraft()">Save changes</button></div>`};
 function testPrint(){Print.run({no:0,t:Date.now(),cust:'Test',items:[{name:'Sample Item',qty:2,price:50,gst:5},{name:'नमस्ते चाय',qty:1,price:20,gst:0}],sub:120,disc:0,tax:5,total:125,pay:'Cash'})}
 function setK(k,v){DB.d.set[k]=v;DB.save();toast('Saved')}
 async function pair(k){try{k==='bt'?await Thermal.pairBT():await Thermal.pairUSB();toast('Paired: '+DB.d.set.pname);render()}catch(e){toast(e.message||'Pairing cancelled')}}

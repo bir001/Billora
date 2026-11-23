@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signed() { return request.auth != null; }
+    function me(uid) { return signed() && request.auth.uid == uid; }
+    function isAdmin() { return signed() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function live(uid) { return get(/databases/$(database)/documents/users/$(uid)).data.accessUntil > request.time.toMillis(); }
+
+    match /admins/{uid} { allow read: if me(uid); allow write: if false; }
+    match /plans/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    match /users/{uid} {
+      allow read: if me(uid) || isAdmin();
+      allow create: if me(uid)
+        && request.resource.data.plan == 'trial' && request.resource.data.status == 'trial'
+        && request.resource.data.planEnds == 0
+        && request.resource.data.accessUntil <= request.time.toMillis() + 4 * 86400000;
+      allow update: if isAdmin() || (me(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','phone','shop','lastActive','stats','branches','ua']));
+      allow delete: if false;
+
+      // business data: only while the subscription is live
+      match /br/{branch}/rec/{rec} { allow read, write: if me(uid) && live(uid); }
+    }
+
+    match /requests/{id} {
+      allow create: if signed() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'pending';
+      allow read: if isAdmin() || (signed() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+  }
+}
