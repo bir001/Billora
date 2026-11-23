@@ -27,3 +27,5 @@ NOTES
   Otherwise choose "System" print and use your printer's Android print service.
 
 CLOUD / PLANS (new): see FIREBASE-SETUP.txt. Files: firebase-config.js, cloud.js, account.js, admin.html, admin.js, firestore.rules.
+LABELS / SCANNERS (new): Items > tag icon, or an item > Labels. Barcode (Code 128) or QR, sizes 50x25 / 50x50 / custom, preview, copies, system print or thermal printer.
+Scan with the phone camera (1D + 2D) or any USB / Bluetooth scanner on the billing screen.

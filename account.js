@@ -7,6 +7,7 @@ V.account=()=>{const p=Cloud.prof||{},en=Cloud.enabled;
  return `<div class="pagehead"><div><h1>Account</h1><p>${esc(Cloud.sync?'Cloud sync on':'Local data only')} • ${navigator.onLine?'Online':'Offline'}</p></div></div>
  <div class="hero2"><div class="row"><div class="avt big">${esc((p.name||'U')[0].toUpperCase())}</div><div style="flex:1;margin-left:12px"><b style="font-size:18px">${esc(p.name||'')}</b><div style="opacity:.85;font-size:13px">${esc(p.email||'')}</div><div style="opacity:.85;font-size:13px">${esc(p.shop||'')}</div></div></div>
  <div class="hrow" style="margin-top:14px"><span>${I('crown',14)} ${esc(Sub.label())}</span>${s.k==='trial'||s.k==='active'?`<span>${s.left} days left</span>`:''}</div></div>
+${Cloud.warn?`<div class="panel card" style="border-color:var(--bad)"><b class="danger">Cloud not connected</b><p class="muted" style="font-size:13px;margin-top:4px">${esc(Cloud.warn)}</p><button class="btn o sm" onclick="location.reload()">Retry</button></div>`:''}
  <button class="btn b w" onclick="go('plans')">${I('crown',18)} ${s.k==='active'?'Change / renew plan':'View plans & upgrade'}</button>
  <div class="panel card" style="margin-top:14px"><h3>Branches</h3>${br.map(b=>`<div class="ln" onclick="${b.id===Branch.cur?'':`Branch.go('${b.id}')`}" style="cursor:pointer"><span>${I('store',16)} ${esc(b.name)}</span><b>${b.id===Branch.cur?'<span class="pill ok">Current</span>':'Switch'}</b></div>`).join('')}
  <button class="btn o w" style="margin-top:10px" onclick="Branch.add()">+ Add branch <small>(${br.length}/${Sub.limit().branches})</small></button></div>
@@ -15,6 +16,7 @@ V.account=()=>{const p=Cloud.prof||{},en=Cloud.enabled;
  <div class="ln" onclick="go('plans')" style="cursor:pointer"><span>${I('crown',16)} Plans & pricing</span>${I('right',16)}</div>
  ${Native.on?'':`<a class="ln" href="${APK_URL}" style="text-decoration:none;color:inherit"><span>${I('down',16)} Download Android app</span>${I('right',16)}</a>`}
  ${Cloud.isAdmin?`<a class="ln" href="admin.html" style="text-decoration:none;color:inherit"><span>${I('chart',16)} Admin dashboard</span>${I('right',16)}</a>`:''}
+ <div class="ln"><span class="muted">Running in</span><b>${Native.on?'Billora Android app':'Browser'}</b></div>
  <div class="ln" onclick="Cloud.logout()" style="cursor:pointer"><span class="danger">${I('x',16)} Log out</span></div></div>`};
 const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
 V.plans=()=>{const pl=Sub.plans(),cur=Sub.cache(),y=PERIOD==='y';

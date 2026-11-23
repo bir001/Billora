@@ -17,26 +17,32 @@ const Branch={cur:localStorage.getItem('bl_branch')||'main',
  async add(){const n=(prompt('Branch name?')||'').trim();if(!n)return;if(this.list().length>=Sub.limit().branches)return toast('Branch limit reached — upgrade your plan');
   try{await Cloud.db.doc('users/'+Cloud.user.uid).update({branches:[...this.list(),{id:'b'+uid(),name:n}]});toast('Branch added');}catch(e){toast('Could not add branch')}}
 };
-const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db:null,auth:null,isAdmin:false,msg:'',_t:null,_busy:false,_again:false,_chg:false,_un:null,
+const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db:null,auth:null,isAdmin:false,warn:'',msg:'',_t:null,_busy:false,_again:false,_chg:false,_un:null,
  ui(t){const e=$('#cs');if(e)e.textContent=t},
  tm(p,ms=12000){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])},
  blocked(){if(!this.enabled)return false;const k=Sub.state().k;return k==='expired'||k==='suspended'},
  form(k,o){const x={...o};if(k==='prods')delete x.stock;if(k==='custs')delete x.due;return x},
  async init(){if(!FIREBASE_CONFIG.apiKey)return;this.enabled=true;
-  if(!window.firebase){const c=localStorage.getItem('bl_prof');if(c){this.prof=JSON.parse(c);ME.name=this.prof.name||'Owner';return}this.gate='login';this.msg='Internet is needed for the first login.';return}
-  firebase.initializeApp(FIREBASE_CONFIG);this.auth=firebase.auth();this.db=firebase.firestore();
+  if(!window.firebase){const c=localStorage.getItem('bl_prof');if(c){this.prof=JSON.parse(c);this.warn='Offline mode';ME.name=this.prof.name||'Owner';return}this.gate='login';this.msg='Internet is needed for the first login.';return}
+  firebase.initializeApp(FIREBASE_CONFIG);this.auth=firebase.auth();this.db=firebase.firestore();try{this.db.settings({experimentalAutoDetectLongPolling:true})}catch(e){}
+  try{await this.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){}
   const u=await new Promise(res=>{const un=this.auth.onAuthStateChanged(x=>{un();res(x)})});
   if(!u){this.gate='login';return}
-  this.user=u;await this.profile();if(this.gate)return;
+  this.user=u;await this.profile();
   this.on=true;this.listenProfile();this.isAdmin=await this.tm(this.db.doc('admins/'+u.uid).get(),5000).then(s=>s.exists).catch(()=>false);
-  this.loadPlans();setInterval(()=>this.beat(),600000);this.beat();
+  if(this.warn)setTimeout(()=>toast('Cloud not connected: '+this.warn),1500);this.loadPlans();setInterval(()=>this.beat(),600000);this.beat();
   if(Sub.limit().cloud&&!this.blocked())await this.startSync().catch(e=>console.warn(e))},
- async profile(){const ref=this.db.doc('users/'+this.user.uid);let d=null;
-  try{const s=await this.tm(ref.get(),6000);d=s.exists?s.data():null;
-   if(!s.exists){const m=JSON.parse(localStorage.getItem('bl_pending')||'{}'),now=Date.now(),ends=now+TRIAL_DAYS*864e5;
-    d={email:this.user.email,name:m.name||this.user.email.split('@')[0],phone:m.phone||'',shop:m.shop||'',createdAt:now,plan:'trial',status:'trial',trialEnds:ends,planEnds:0,accessUntil:ends,branches:[{id:'main',name:'Main branch'}],lead:{status:'new',note:''},lastActive:now,stats:{bills:0}};
-    await this.tm(ref.set(d),8000);localStorage.removeItem('bl_pending')}}
-  catch(e){const c=localStorage.getItem('bl_prof');if(c)d=JSON.parse(c);else{this.gate='login';this.msg='Could not load your account. Check internet.';return}}
+ errText(e){const c=(e&&e.code||'').replace('firestore/','');
+  if(c==='permission-denied')return 'Database says permission denied — publish firestore.rules in Firebase (Firestore > Rules).';
+  if(c==='not-found')return 'Firestore database is not created yet (Firebase > Firestore Database > Create).';
+  if(c==='unavailable'||(e&&e.message==='timeout'))return 'Cannot reach the database. Check internet, and that Firestore is created.';
+  return (c||'error')+': '+((e&&e.message)||'').slice(0,90)},
+ fallback(){const m=JSON.parse(localStorage.getItem('bl_pending')||'{}'),t0=+(this.user.metadata&&this.user.metadata.createdAt)||Date.now(),ends=t0+TRIAL_DAYS*864e5;
+  return{email:this.user.email,name:m.name||(this.user.email||'').split('@')[0],phone:m.phone||'',shop:m.shop||'',createdAt:t0,plan:'trial',status:'trial',trialEnds:ends,planEnds:0,accessUntil:ends,branches:[{id:'main',name:'Main branch'}],lead:{status:'new',note:''},lastActive:Date.now(),stats:{bills:0},local:true}},
+ async profile(){const ref=this.db.doc('users/'+this.user.uid);let d=null,err=null;
+  for(let k=0;k<2&&!d;k++){try{const s=await this.tm(ref.get(),15000);d=s.exists?s.data():null;err=null;
+   if(!s.exists){const x=this.fallback();delete x.local;await this.tm(ref.set(x),15000);d=x;localStorage.removeItem('bl_pending')}}catch(e){err=e;d=null;await new Promise(r=>setTimeout(r,800))}}
+  if(!d){const c=localStorage.getItem('bl_prof');d=c?JSON.parse(c):this.fallback();this.warn=this.errText(err);console.warn('profile',err)}else this.warn='';
   this.setProf(d)},
  setProf(d){this.prof=d;ME.name=d.name||'Owner';localStorage.setItem('bl_prof',JSON.stringify(d));
   localStorage.setItem('bl_sub',JSON.stringify({plan:d.plan,status:d.status,accessUntil:d.accessUntil,planEnds:d.planEnds,trialEnds:d.trialEnds,v:Date.now()}));

@@ -1,7 +1,7 @@
 /* THERMAL: direct ESC/POS printing over Bluetooth (BLE) and USB (OTG) */
 const Thermal={dev:null,ch:null,usb:null,ep:null,
  SVC:['000018f0-0000-1000-8000-00805f9b34fb','49535343-fe7d-4ae5-8fa9-9fafd205e455','e7810a71-73ae-499d-8c15-faa9aef0c3f2','0000ffe0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000fee7-0000-1000-8000-00805f9b34fb'],
- async pairBT(){if(!navigator.bluetooth)throw Error('Use Chrome (Android) for Bluetooth printing');
+ async pairBT(){if(Native.on){printerSheet();return}if(!navigator.bluetooth)throw Error('Use Chrome (Android) for Bluetooth printing');
   const d=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:this.SVC});await this.openBT(d)},
  async openBT(d){const g=await d.gatt.connect();
   for(const sv of await g.getPrimaryServices()){const c=(await sv.getCharacteristics()).find(x=>x.properties.write||x.properties.writeWithoutResponse);
