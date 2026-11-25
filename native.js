@@ -1,5 +1,5 @@
 /* NATIVE: bridge to the Billora Android app (in-app Bluetooth / USB / LAN printing, file save) */
-const Native={on:typeof window.BilloraNative!=='undefined',tab:'bt',scanning:false,devs:{bt:[],usb:[]},
+const Native={on:typeof window.BilloraNative!=='undefined',pst:null,tab:'bt',scanning:false,devs:{bt:[],usb:[]},
  raw(m,...a){try{return window.BilloraNative[m](...a)}catch(e){return null}},
  printer(){try{return JSON.parse(this.raw('printer')||'null')}catch(e){return null}},
  has(){const p=this.printer();return !!(p&&p.type)},
@@ -9,7 +9,8 @@ const Native={on:typeof window.BilloraNative!=='undefined',tab:'bt',scanning:fal
   if(e.ev==='bt-found'){const i=D.bt.findIndex(x=>x.addr===e.addr);i<0?D.bt.push(e):D.bt[i]=e;this.paint()}
   else if(e.ev==='bt-done'){this.scanning=false;this.paint()}
   else if(e.ev==='bt-error'){this.scanning=false;toast(e.msg);this.paint()}
-  else if(e.ev==='printer'){toast('Printer ready: '+e.name);closeAll();if(location.hash==='#settings')render()}
+  else if(e.ev==='printer'){toast('Printer saved: '+e.name);this.pst={ok:true,name:e.name};hdrBT();closeAll();if(location.hash==='#settings')render();setTimeout(()=>this.raw('status'),600)}
+  else if(e.ev==='pstatus'){const was=this.pst&&this.pst.ok;this.pst=e;hdrBT();if(was!==undefined&&was!==null&&was!==e.ok)toast(e.ok?'Printer connected':'Printer disconnected');const el=$('#pst');if(el)el.outerHTML=this.card()}
   else if(e.ev==='print')toast(e.ok?'Sent to printer':'Print failed: '+e.msg);
   else if(e.ev==='saved')toast('Saved to Downloads: '+e.name)},
  paint(){const el=$('#pl');if(!el)return;const t=this.tab;
@@ -20,9 +21,17 @@ const Native={on:typeof window.BilloraNative!=='undefined',tab:'bt',scanning:fal
  pick(k,i){const d=this.devs[k][i];if(k==='bt')this.raw('useBt',d.addr,d.name);else this.raw('useUsb',d.id,d.name);toast('Connecting…')},
  lan(){const ip=$('#lip').value.trim(),p=+$('#lpt').value||9100;if(!ip)return toast('Enter the printer IP');this.raw('useLan',ip,p);toast('Connecting…')}
 };
+Native.card=function(){const p=this.printer(),s=btState();if(!p||!p.type)return `<div id="pst" class="pst none"><span class="dotb"></span><div><b>No printer selected</b><small>Search below and tap your printer</small></div></div>`;
+ return `<div id="pst" class="pst ${s.k}"><span class="dotb"></span><div><b>${s.k==='ok'?'Connected':s.k==='off'?'Not connected':'Saved'}</b><small>${esc(p.name)} • ${p.type.toUpperCase()}</small></div>${s.k==='ok'?`<button class="btn o sm" onclick="Native.raw('disconnect')">Disconnect</button>`:`<button class="btn b sm" onclick="Native.raw('reconnect');toast('Connecting…')">Reconnect</button>`}</div>`};
 window.onNative=e=>Native.ev(e);
+function btState(){const p=Native.on?Native.printer():null;
+ if(Native.on){if(!p||!p.type)return{k:'none',t:'No printer'};const s=Native.pst;if(s&&s.ok)return{k:'ok',t:'Connected',n:p.name};if(s&&s.ok===false)return{k:'off',t:'Not connected',n:p.name};return{k:'warn',t:'Saved',n:p.name}}
+ const c=DB.d.set.conn;if(c==='bt'&&Thermal.ch&&Thermal.dev&&Thermal.dev.gatt.connected)return{k:'ok',t:'Connected',n:DB.d.set.pname};if(c==='usb'&&Thermal.usb&&Thermal.usb.opened)return{k:'ok',t:'Connected',n:DB.d.set.pname};
+ if(c==='bt'||c==='usb')return{k:'off',t:'Not connected',n:DB.d.set.pname};if(c==='rawbt')return{k:'warn',t:'RawBT',n:'RawBT app'};return{k:'none',t:'System print'}}
+function hdrBT(){const b=$('#hbt');if(!b)return;const s=btState();b.className='ib btb '+s.k;b.title=s.t+(s.n?' • '+s.n:'');const d=b.querySelector('.dot');if(d)d.className='dot '+s.k}
+function btClick(){if(Native.on){printerSheet();Native.raw('status')}else go('settings')}
 function printerSheet(){const p=Native.printer(),t=Native.tab;
- openSheet(`<h3>Printer</h3><p class="mut">${p&&p.type?'Connected: <b>'+esc(p.name)+'</b> ('+p.type.toUpperCase()+')':'No printer selected'}</p>
+ openSheet(`<h3>Printer</h3>${Native.card()}
  <div class="seg">${[['bt','Bluetooth'],['usb','USB'],['lan','LAN / Wi-Fi']].map(x=>`<button class="${t===x[0]?'on':''}" onclick="Native.tab='${x[0]}';printerSheet()">${x[1]}</button>`).join('')}</div><div id="pl"></div>
  ${p&&p.type?`<button class="btn o w danger" onclick="Native.raw('clearPrinter');printerSheet()">Remove printer</button>`:''}`);Native.paint()}
 const Save={blob(name,blob){if(Native.on){const r=new FileReader();r.onload=()=>Native.raw('saveFile',name,blob.type||'application/octet-stream',String(r.result).split(',')[1]);r.readAsDataURL(blob)}

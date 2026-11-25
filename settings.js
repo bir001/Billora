@@ -16,15 +16,15 @@ V.settings=()=>{const s=DB.d.set,v=k=>SD[k]!==undefined?SD[k]:s[k],t=(k,l,ty='te
  <button class="sum" style="width:100%;margin-bottom:14px" onclick="tplSheet()">${I('file',21)}<span><small>Bill template</small><b>${(TPLS.find(x=>x[0]===s.tpl)||TPLS[0])[1]}</b></span>${I('right',16)}</button><div class="fg">${t('head','Bill heading')}${t('hdr','Header text')}${t('foot','Footer message')}${t('terms','Terms & conditions')}${t('pay','Payment details (UPI ID etc.)')}${t('font','Font size (A4 / system print)','number')}${t('margin','Margin (mm)','number')}${t('copies','Copies (2 = double print)','number')}
  </div></div>
  ${storagePanel()}
- <div class="panel card"><h3>Backup</h3><div class="acts"><button class="btn o" onclick="backup()">${I('down',18)} Export JSON</button><button class="btn o" onclick="$('#imp').click()">Import</button></div><input id="imp" type="file" accept=".json" class="hide" onchange="restore(this.files[0])"></div>
+ ${Backup.panel()}
  <div class="about"><img src="logo-sm.png" alt=""><div><b>Billora POS</b> • v1.0</div><div>Fast touch billing & inventory</div></div>
  <div id="savebar" class="savebar ${Object.keys(SD).length?'':'hide'}"><span id="sbn">${Object.keys(SD).length} unsaved change${Object.keys(SD).length===1?'':'s'}</span><button class="btn o sm" onclick="discardDraft()">Discard</button><button class="btn b" onclick="saveDraft()">Save changes</button></div>`};
 function testPrint(){Print.run({no:0,t:Date.now(),cust:'Test',items:[{name:'Sample Item',qty:2,price:50,gst:5},{name:'नमस्ते चाय',qty:1,price:20,gst:0}],sub:120,disc:0,tax:5,total:125,pay:'Cash'})}
 function setK(k,v){DB.d.set[k]=v;DB.save();toast('Saved')}
 async function pair(k){try{k==='bt'?await Thermal.pairBT():await Thermal.pairUSB();toast('Paired: '+DB.d.set.pname);render()}catch(e){toast(e.message||'Pairing cancelled')}}
 function setConn(m){if(m==='bt'||m==='usb')return pair(m);DB.d.set.conn=m;DB.save();render();if(m==='rawbt')toast('Make sure RawBT is installed and your printer is added in it')}
-function backup(){Save.blob('billora-backup.json',new Blob([JSON.stringify(DB.d)],{type:'application/json'}))}
-function restore(f){if(!f)return;f.text().then(t=>{try{DB.d=Object.assign(structuredClone(DEF),JSON.parse(t));DB.save();toast('Backup restored');render()}catch(e){toast('Invalid backup file')}})}
+function backup(){Backup.download(0)}
+function restore(f){Backup.restore(f)}
 
 function nativePrinter(s){const p=Native.printer()||{};return `<div class="panel card"><h3>Printer</h3>
  <button class="sum" style="width:100%;margin-bottom:12px" onclick="printerSheet()">${I(p.type==='usb'?'usb':p.type==='lan'?'wifi':'bt',22)}<span><small>${p.type?p.type.toUpperCase()+' printer':'No printer selected'}</small><b>${p.type?esc(p.name):'Search & connect'}</b></span>${I('right',16)}</button>

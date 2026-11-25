@@ -1,5 +1,5 @@
 /* CLOUD: Firebase login, subscription state, branches, offline-first sync (per-record + stock/due movements) */
-const COLS=['prods','custs','sups','bills','buys','rets','prets','kots'];
+const COLS=['prods','custs','sups','bills','buys','rets','prets','kots','labels'];
 const Sub={
  cache(){try{return JSON.parse(localStorage.getItem('bl_sub'))}catch(e){return null}},
  plans(){try{const p=JSON.parse(localStorage.getItem('bl_plans'));if(p&&p.length)return p}catch(e){}return DEFAULT_PLANS},
@@ -93,6 +93,6 @@ const Cloud={enabled:false,on:false,sync:false,gate:false,user:null,prof:null,db
   commit.forEach(f=>f())},
  touch(ms=1500){if(!this.sync)return;clearTimeout(this._t);this._t=setTimeout(()=>this.run(),ms)},
  async run(){if(this._busy){this._again=true;return}if(!navigator.onLine){this.ui('Offline');return}this._busy=true;this.ui('Syncing…');
-  try{await this.push();DB.raw();this.ui('Synced ✓')}catch(e){console.warn(e);this.ui('Sync paused')}this._busy=false;if(this._again){this._again=false;this.touch(500)}}
+  try{await this.push();DB.raw();this.ui('Synced ✓');if(typeof Backup!=='undefined')Backup.auto()}catch(e){console.warn(e);this.ui('Sync paused')}this._busy=false;if(this._again){this._again=false;this.touch(500)}}
 };
 window.addEventListener('offline',()=>Cloud.ui&&Cloud.ui('Offline'));
