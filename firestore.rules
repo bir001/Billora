@@ -21,6 +21,14 @@ service cloud.firestore {
 
       // business data: only while the subscription is live
       match /br/{branch}/rec/{rec} { allow read, write: if me(uid) && live(uid); }
+
+      // compact backup snapshots (the owner/admin can read them to archive or export a customer's data)
+      match /backups/{b} { allow read: if me(uid) || isAdmin(); allow write: if me(uid) && live(uid); }
+    }
+
+    match /labelTemplates/{id} {
+      allow read: if isAdmin() || (signed() && (resource.data.assign == 'all' || request.auth.uid in resource.data.users));
+      allow write: if isAdmin();
     }
 
     match /requests/{id} {

@@ -36,26 +36,35 @@ const LD={T:null,sel:[],hist:[],redo:[],multi:false,show:true,zm:1,k:1,drag:null
   else if(t==='image'){const im=this.IMG[e.src];if(im&&im.complete&&im.naturalWidth)c.drawImage(im,0,0,w,h);else{c.strokeRect(0,0,w,h);c.beginPath();c.moveTo(0,0);c.lineTo(w,h);c.moveTo(w,0);c.lineTo(0,h);c.stroke()}}
   else if(t==='border'){const lw=Math.max(1,e.sw*s);c.lineWidth=lw;c.beginPath();this.rr(c,lw/2,lw/2,w-lw,h-lw,(e.r||0)*s);c.stroke()}
   c.restore()},
- paint(c,T,s,v,edit){c.fillStyle='#fff';c.fillRect(0,0,T.w*s,T.h*s);T.els.forEach(e=>this.paintEl(c,e,s,v));
+ paint(c,T,s,v,edit){c.fillStyle='#fff';c.fillRect(0,0,T.w*s,T.h*s);if(edit&&this.grid){c.save();c.strokeStyle='rgba(0,0,0,.12)';c.lineWidth=1;for(let x=5;x<T.w;x+=5){c.beginPath();c.moveTo(x*s,0);c.lineTo(x*s,T.h*s);c.stroke()}for(let y=5;y<T.h;y+=5){c.beginPath();c.moveTo(0,y*s);c.lineTo(T.w*s,y*s);c.stroke()}c.restore()}T.els.forEach(e=>this.paintEl(c,e,s,v));
   if(edit){c.save();c.strokeStyle='#0ea5a4';c.fillStyle='#0ea5a4';c.lineWidth=1.5;c.setLineDash([5,3]);this.sel.forEach(id=>{const e=this.el(id);if(!e)return;const b=this.bbox(e);c.strokeRect(b.x*s,b.y*s,b.w*s,b.h*s)});
    if(this.sel.length===1){const e=this.el(this.sel[0]);if(e){const b=this.bbox(e);c.setLineDash([]);c.fillRect((b.x+b.w)*s-6,(b.y+b.h)*s-6,12,12)}}c.restore()}},
  draw(){const cv=$('#ldcv');if(!cv)return;const T=this.T,d=window.devicePixelRatio||1;cv.width=Math.round(T.w*this.k*d);cv.height=Math.round(T.h*this.k*d);cv.style.width=T.w*this.k+'px';cv.style.height=T.h*this.k+'px';
-  const c=cv.getContext('2d');c.save();if(T.shape!=='rect'){c.beginPath();if(T.shape==='ellipse')c.ellipse(cv.width/2,cv.height/2,cv.width/2,cv.height/2,0,0,7);else this.rr(c,0,0,cv.width,cv.height,Math.min(cv.width,cv.height)*.18);c.clip()}this.paint(c,T,this.k*d,this.vars,true);c.restore()},
- fit(){const a=$('#ldc');if(!a)return;const T=this.T,aw=a.clientWidth-32,ah=a.clientHeight-32;this.k=Math.max(1.5,Math.min(aw/T.w,ah/T.h)*this.zm)},
+  const c=cv.getContext('2d');c.save();if(T.shape!=='rect'){c.beginPath();if(T.shape==='ellipse')c.ellipse(cv.width/2,cv.height/2,cv.width/2,cv.height/2,0,0,7);else this.rr(c,0,0,cv.width,cv.height,Math.min(cv.width,cv.height)*.18);c.clip()}this.paint(c,T,this.k*d,this.vars,true);c.restore();this.rulers();this.info()},
+ rulers(){const T=this.T,k=this.k,d=window.devicePixelRatio||1,rt=$('#ldrt'),rl=$('#ldrl');if(!rt||!rl)return;const R=20;rt.width=Math.round(T.w*k*d);rt.height=R*d;rt.style.width=T.w*k+'px';rt.style.height=R+'px';rl.width=R*d;rl.height=Math.round(T.h*k*d);rl.style.width=R+'px';rl.style.height=T.h*k+'px';
+  const a=rt.getContext('2d'),b=rl.getContext('2d');[a,b].forEach(c=>{c.fillStyle='#eef0f5';c.fillRect(0,0,1e5,1e5);c.fillStyle='#444';c.strokeStyle='#666';c.lineWidth=d;c.font=`${9*d}px sans-serif`;c.textBaseline='top'});
+  const every=k>=5?1:k>=2.2?5:10;for(let mm=0;mm<=T.w+.01;mm+=every){const x=mm*k*d,big=mm%10===0,mid=mm%5===0;a.beginPath();a.moveTo(x,R*d);a.lineTo(x,(R-(big?13:mid?9:5))*d);a.stroke();if(big||(mid&&k>=5))a.fillText(mm,x+2*d,1*d)}
+  for(let mm=0;mm<=T.h+.01;mm+=every){const y=mm*k*d,big=mm%10===0,mid=mm%5===0;b.beginPath();b.moveTo(R*d,y);b.lineTo((R-(big?13:mid?9:5))*d,y);b.stroke();if(big||(mid&&k>=5))b.fillText(mm,1*d,y+2*d)}},
+ info(){const el=$('#ldinfo');if(!el)return;const T=this.T,e=this.sel.length===1?this.el(this.sel[0]):null,f=n=>(+n).toFixed(1);el.textContent=e?`Selected: X ${f(e.x)}  Y ${f(e.y)}  W ${f(e.w)} × H ${f(e.h)} mm   •   Label ${T.w} × ${T.h} mm`:`Label area ${T.w} × ${T.h} mm   •   Double-tap an item to edit • pinch to zoom`},
+ fit(){const a=$('#ldc');if(!a)return;const T=this.T,aw=a.clientWidth-64,ah=a.clientHeight-64;this.k0=Math.max(1.2,Math.min(aw/T.w,ah/T.h));this.k=this.k0*this.zm},
  /* ---------- screens ---------- */
  push(){this.hist.push(JSON.stringify(this.T.els));if(this.hist.length>60)this.hist.shift();this.redo=[]},
  undo(){if(this.hist.length<2)return;this.redo.push(this.hist.pop());this.T.els=JSON.parse(this.hist[this.hist.length-1]);this.sel=[];this.tools();this.draw()},
  redoo(){if(!this.redo.length)return;const s=this.redo.pop();this.hist.push(s);this.T.els=JSON.parse(s);this.sel=[];this.tools();this.draw()},
- async open(id){const t=DB.d.labels.find(x=>x.id===id);this.T=t?JSON.parse(JSON.stringify(t)):this.T;if(!this.T)return;this.sel=[];this.zm=1;this.hist=[JSON.stringify(this.T.els)];this.redo=[];this.multi=false;this.show=true;
+ lock(){openSheet(`<h3>Label designer</h3><div class="qi" style="width:60px;height:60px;border-radius:18px;margin:6px 0 12px">${I('lock',28)}</div><p class="mut" style="line-height:1.5">Designing your own labels is part of the Pro and Business plans. You can still print every ready-made template shared with you.</p><button class="btn b w" onclick="closeAll();go('plans')">${I('crown',18)} See plans</button>`)},
+ can(){return this.admin||typeof Sub==='undefined'||typeof Cloud==='undefined'||!Cloud.enabled||Sub.limit().designer},
+ async open(id){if(!this.can())return this.lock();const t=DB.d.labels.find(x=>x.id===id);this.T=t?JSON.parse(JSON.stringify(t)):this.T;if(!this.T)return;this.sel=[];this.zm=1;this.hist=[JSON.stringify(this.T.els)];this.redo=[];this.multi=false;this.show=true;
   const o=$('#ld')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'ld'}));
   const tb=[['layout','Layout','LD.layouts()'],['trash','Delete','LD.del()'],['undo','Undo','LD.undo()'],['redo','Redo','LD.redoo()'],['copy','Copy','LD.copy()'],['rotate','Rotate','LD.rot()'],['check',this.multi?'Multi':'Single','LD.mm()'],['select','Selection','LD.selSheet()']];
-  o.innerHTML=`<div class="ldt"><button onclick="LD.close()">${I('back',24)}</button><b id="ldti"></b><div style="display:flex"><button onclick="LD.zoom()" id="ldz">1.0x</button><button onclick="LD.setSheet()">${I('sliders',22)}</button></div></div><div class="ldc" id="ldc"><canvas id="ldcv"></canvas></div>
+  o.innerHTML=`<div class="ldt"><button onclick="LD.close()">${I('back',24)}</button><b id="ldti" style="font-size:14px;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></b><div style="display:flex"><button onclick="LD.zbtn(-1)">−</button><button onclick="LD.zbtn(0)" id="ldz">100%</button><button onclick="LD.zbtn(1)">+</button><button onclick="LD.gridT()">${I('grid',22)}</button><button onclick="LD.setSheet()">${I('sliders',22)}</button></div></div><div class="ldc" id="ldc"><div class="ldw"><div class="rc0"></div><canvas id="ldrt" class="rul"></canvas><canvas id="ldrl" class="rul"></canvas><canvas id="ldcv"></canvas></div></div><div class="ldinfo" id="ldinfo"></div>
   <div class="ldtb">${tb.map(b=>`<button id="tb_${b[1]}" onclick="${b[2]}">${I(b[0],22)}<span>${b[1]}</span></button>`).join('')}</div><div class="ldtools" id="ldtools"></div>
-  <div class="ldb"><button class="sq" onclick="LD.toggle()">${I('chev',22)}</button><button class="btn o" onclick="LD.save()">Save</button><button class="btn b" onclick="LD.printSheet()">${I('printer',18)} Print</button></div>`;
+  <div class="ldb"><button class="sq" onclick="LD.toggle()">${I('chev',22)}</button><button class="btn o" onclick="LD.save()">Save</button>${this.noPrint?'':`<button class="btn b" onclick="LD.printSheet()">${I('printer',18)} Print</button>`}</div>`;
   $('#ldti').textContent=`${this.T.name} • ${this.T.w}×${this.T.h}mm`;this.fit();this.draw();this.tools();this.bind();await this.prep(this.T,this.vars);this.draw()},
- close(){const o=$('#ld');if(o)o.remove();if(location.hash==='#labels')render()},
+ close(){const o=$('#ld');if(o)o.remove();if(this.afterClose)this.afterClose();else if(location.hash==='#labels')render()},
  toggle(){this.show=!this.show;$('#ldtools').style.display=this.show?'grid':'none';this.fit();this.draw()},
- zoom(){this.zm=this.zm>=2?1:this.zm+.5;$('#ldz').textContent=this.zm.toFixed(1)+'x';this.fit();this.draw()},
+ zbtn(d){this.zm=d===0?1:Math.min(6,Math.max(.4,this.zm*(d>0?1.25:.8)));this.zshow();this.fit();this.draw()},
+ zshow(){const z=$('#ldz');if(z)z.textContent=Math.round(this.zm*100)+'%'},
+ gridT(){this.grid=!this.grid;this.draw()},
  mm(){this.multi=!this.multi;const b=$('#tb_Single')||$('#tb_Multi');if(b){b.id=this.multi?'tb_Multi':'tb_Single';b.querySelector('span').textContent=this.multi?'Multi':'Single';b.classList.toggle('on',this.multi)}if(!this.multi&&this.sel.length>1)this.sel=this.sel.slice(0,1);this.tools();this.draw()},
  tools(){const t=$('#ldtools');if(!t)return;const e=this.sel.length===1?this.el(this.sel[0]):null;
   if(e){t.innerHTML=`<div class="ldpb"><button onclick="LD.sel=[];LD.tools();LD.draw()">${I('plus',18)} Add</button><button onclick="LD.edit()">Edit</button><button onclick="LD.fs(-.4)">A−</button><button onclick="LD.fs(.4)">A+</button><button onclick="LD.nudge(-.5,0)">←</button><button onclick="LD.nudge(.5,0)">→</button><button onclick="LD.nudge(0,-.5)">↑</button><button onclick="LD.nudge(0,.5)">↓</button><button onclick="LD.del()">${I('trash',18)}</button></div>`;return}
@@ -75,18 +84,25 @@ const LD={T:null,sel:[],hist:[],redo:[],multi:false,show:true,zm:1,k:1,drag:null
  nudge(dx,dy){this.sel.forEach(id=>{const e=this.el(id);e.x+=dx;e.y+=dy});this.push();this.draw()},
  selSheet(){openSheet(`<h3>Items on this label</h3>${this.T.els.length?this.T.els.map(e=>`<div class="ar" onclick="LD.sel=['${e.id}'];closeAll();LD.tools();LD.draw()"><span class="ai">${I(({icon:'smile',time:'clock'})[e.type]||e.type,20)}</span><span class="at"><b>${TNAME[e.type]}</b><small>${esc((e.text||e.g||e.fmt||e.kind||'').toString().slice(0,40))}</small></span>${I('right',18)}</div>`).join(''):'<p class="mut">Nothing yet — add items from the tools below.</p>'}<button class="btn o w" style="margin-top:12px" onclick="LD.sel=LD.T.els.map(e=>e.id);closeAll();LD.tools();LD.draw()">Select all</button>`)},
  /* ---------- touch ---------- */
- bind(){const cv=$('#ldcv');cv.onpointerdown=e=>this.down(e);cv.onpointermove=e=>this.move(e);cv.onpointerup=cv.onpointercancel=()=>this.up()},
+ bind(){const cv=$('#ldcv');this.ptrs={};this.pinch=null;cv.onpointerdown=e=>this.down(e);cv.onpointermove=e=>this.move(e);cv.onpointerup=cv.onpointercancel=e=>this.up(e);$('#ldc').addEventListener('wheel',e=>{e.preventDefault();this.zbtn(e.deltaY<0?1:-1)},{passive:false})},
  pt(e){const r=$('#ldcv').getBoundingClientRect();return{x:(e.clientX-r.left)/this.k,y:(e.clientY-r.top)/this.k}},
- down(ev){const p=this.pt(ev),T=this.T,hs=4;ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId);const s1=this.sel.length===1?this.el(this.sel[0]):null;
+ down(ev){const cv=$('#ldcv'),a=$('#ldc');ev.target.setPointerCapture&&ev.target.setPointerCapture(ev.pointerId);this.ptrs[ev.pointerId]={x:ev.clientX,y:ev.clientY};
+  const ids=Object.keys(this.ptrs);if(ids.length===2){const p=ids.map(i=>this.ptrs[i]);this.pinch={d0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)||1,z0:this.zm};this.drag=null;return}
+  const p=this.pt(ev),T=this.T,hs=Math.max(3,18/this.k),s1=this.sel.length===1?this.el(this.sel[0]):null;
   if(s1){const b=this.bbox(s1);if(Math.abs(p.x-(b.x+b.w))<hs&&Math.abs(p.y-(b.y+b.h))<hs){this.drag={m:'rs',id:s1.id,sx:p.x,sy:p.y,w:s1.w,h:s1.h};return}}
   let hit=null;for(let i=T.els.length-1;i>=0;i--){const e=T.els[i];if(e.type==='border')continue;const b=this.bbox(e);if(p.x>=b.x-1&&p.x<=b.x+b.w+1&&p.y>=b.y-1&&p.y<=b.y+b.h+1){hit=e;break}}
-  if(!hit){this.sel=[];this.tools();this.draw();return}
+  if(!hit){this.sel=[];this.lt=null;this.tools();this.draw();this.drag={m:'pan',sx:ev.clientX,sy:ev.clientY,sl:a.scrollLeft,st:a.scrollTop};return}
+  const now=Date.now();if(this.lt&&this.lt.id===hit.id&&now-this.lt.t<380){this.lt=null;this.sel=[hit.id];this.drag=null;this.tools();this.draw();this.edit();return}this.lt={id:hit.id,t:now};
   if(this.multi){const i=this.sel.indexOf(hit.id);i>=0?this.sel.splice(i,1):this.sel.push(hit.id)}else if(!this.sel.includes(hit.id))this.sel=[hit.id];
   this.drag={m:'mv',sx:p.x,sy:p.y,o:this.sel.map(id=>{const e=this.el(id);return{id,x:e.x,y:e.y}}),moved:false};this.tools();this.draw()},
- move(ev){const d=this.drag;if(!d)return;const p=this.pt(ev),dx=p.x-d.sx,dy=p.y-d.sy,sn=v=>Math.round(v*2)/2;
-  if(d.m==='mv'){if(Math.abs(dx)+Math.abs(dy)>.6)d.moved=true;d.o.forEach(o=>{const e=this.el(o.id);e.x=sn(o.x+dx);e.y=sn(o.y+dy)})}
+ move(ev){if(this.ptrs[ev.pointerId])this.ptrs[ev.pointerId]={x:ev.clientX,y:ev.clientY};
+  if(this.pinch){const ids=Object.keys(this.ptrs);if(ids.length>=2){const p=ids.map(i=>this.ptrs[i]),dd=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);this.zm=Math.min(6,Math.max(.4,this.pinch.z0*dd/this.pinch.d0));this.zshow();this.fit();this.draw()}return}
+  const d=this.drag;if(!d)return;
+  if(d.m==='pan'){const a=$('#ldc');a.scrollLeft=d.sl-(ev.clientX-d.sx);a.scrollTop=d.st-(ev.clientY-d.sy);return}
+  const p=this.pt(ev),dx=p.x-d.sx,dy=p.y-d.sy,sn=v=>Math.round(v*2)/2;
+  if(d.m==='mv'){if(Math.abs(dx)+Math.abs(dy)>.6){d.moved=true;this.lt=null}d.o.forEach(o=>{const e=this.el(o.id);e.x=sn(o.x+dx);e.y=sn(o.y+dy)})}
   else{const e=this.el(d.id);e.w=Math.max(2,sn(d.w+dx));e.h=Math.max(1,sn(d.h+dy));if(e.type==='qr'||e.type==='icon')e.h=e.w;d.moved=true}this.draw()},
- async up(){const d=this.drag;this.drag=null;if(d&&d.moved){await this.prep(this.T,this.vars);this.push();this.draw()}},
+ async up(ev){delete this.ptrs[ev.pointerId];if(this.pinch){if(Object.keys(this.ptrs).length<2)this.pinch=null;return}const d=this.drag;this.drag=null;if(d&&d.moved){await this.prep(this.T,this.vars);this.push();this.draw()}},
  /* ---------- property sheet ---------- */
  edit(){const e=this.el(this.sel[0]);if(!e)return;const sc=[...(SCH[e.type]||[]),...COMMON],chips=(e.type==='text'||e.type==='barcode'||e.type==='qr')?`<div class="ldchips">${['{name}','{price}','{code}','{cat}','{date}'].map(v=>`<button onclick="LD.ins('${v}')">${v}</button>`).join('')}</div>`:'';
   openSheet(`<h3>${TNAME[e.type]}</h3>${chips}${sc.map(([k,l,kind,o])=>{const v=e[k]===undefined?'':e[k],id='f_'+k;
@@ -94,7 +110,7 @@ const LD={T:null,sel:[],hist:[],redo:[],multi:false,show:true,zm:1,k:1,drag:null
    if(kind==='tog')return `<label class="lb">${l}</label><select id="${id}"><option value="1" ${v?'selected':''}>Yes</option><option value="0" ${!v?'selected':''}>No</option></select>`;
    if(kind==='sel')return `<label class="lb">${l}</label><select id="${id}">${Object.entries(o).map(([a,b])=>`<option value="${a}" ${String(v)===a||(!v&&a==='0')?'selected':''}>${b}</option>`).join('')}</select>`;
    if(kind==='icons')return `<input type="hidden" id="${id}" value="${esc(v)}"><div class="icg">${GLYPHS.map(g=>`<button class="${g===v?'on':''}" onclick="$('#${id}').value='${g}';$$('.icg button').forEach(b=>b.classList.toggle('on',b.textContent==='${g}'))">${g}</button>`).join('')}</div>`;
-   if(kind==='img')return `<label class="lb">${l}</label><input type="file" accept="image/*" id="${id}">`;return ''}).join('')}<div class="acts"><button class="btn b" onclick="LD.apply()">Apply</button></div>`)},
+   if(kind==='img')return `<label class="lb">${l}</label><input type="file" accept="image/*" id="${id}">`;return ''}).join('')}<div class="acts"><button class="btn b" onclick="LD.apply()">Apply</button></div>`);setTimeout(()=>{const f=$('#f_text')||$('#f_g');if(f&&f.focus){f.focus();f.select&&f.select()}},380)},
  ins(t){const f=$('#f_text');if(!f)return;const a=f.selectionStart??f.value.length;f.value=f.value.slice(0,a)+t+f.value.slice(f.selectionEnd??a);f.focus()},
  async apply(){const e=this.el(this.sel[0]);[...(SCH[e.type]||[]),...COMMON].forEach(([k,l,kind])=>{const f=$('#f_'+k);if(!f||kind==='img')return;let v=f.value;if(kind==='num')v=+v||0;else if(kind==='tog')v=+v;else if(k==='rot')v=+v;e[k]=v});
   const fi=$('#f_src');const done=async()=>{if(e.type==='qr'||e.type==='icon')e.h=e.w;closeAll();await this.prep(this.T,this.vars);this.push();this.tools();this.draw()};
@@ -109,25 +125,27 @@ const LD={T:null,sel:[],hist:[],redo:[],multi:false,show:true,zm:1,k:1,drag:null
   <label class="lb">Flip black / white (if the print comes out negative)</label><select id="s_flip">${O(T.flip?1:0,{0:'No',1:'Yes'})}</select></details>
   <details class="ds"><summary>More settings</summary><label class="lb">Label shape</label><select id="s_shape">${O(T.shape,{rect:'Rectangle',round:'Rounded',ellipse:'Ellipse'})}</select><label class="lb">Mirror mode</label><select id="s_mir">${O(T.mirror?1:0,{0:'Off',1:'On'})}</select></details>`},
  read(T){const g=k=>$('#s_'+k).value;T.name=g('name').trim()||'My label';T.w=Math.max(10,+g('w')||50);T.h=Math.max(8,+g('h')||25);T.paper=g('paper');T.gap=+g('gap')||0;T.mode=g('mode');T.dir=+g('dir');T.tear=g('tear');T.dpi=+g('dpi');T.flip=g('flip')==='1';T.shape=g('shape');T.mirror=g('mir')==='1'},
- newSheet(){openSheet(`<h3>New label</h3>${this.form(newT())}<button class="btn b w" onclick="LD.create()">Create</button>`)},
+ newSheet(){if(!this.can())return this.lock();openSheet(`<h3>New label</h3>${this.form(newT())}<button class="btn b w" onclick="LD.create()">Create</button>`)},
  create(){const T=newT();this.read(T);this.T=T;closeAll();this.open()},
  setSheet(){openSheet(`<h3>Label settings</h3>${this.form(this.T)}<button class="btn b w" onclick="LD.setApply()">Apply</button>`)},
  setApply(){this.read(this.T);closeAll();$('#ldti').textContent=`${this.T.name} • ${this.T.w}×${this.T.h}mm`;this.fit();this.draw()},
- save(){const D=DB.d,i=D.labels.findIndex(x=>x.id===this.T.id),c=JSON.parse(JSON.stringify(this.T));i>=0?D.labels[i]=c:D.labels.push(c);DB.save();toast('Label saved')},
+ save(){if(this.hook)return this.hook(JSON.parse(JSON.stringify(this.T)));const D=DB.d,i=D.labels.findIndex(x=>x.id===this.T.id),c=JSON.parse(JSON.stringify(this.T));i>=0?D.labels[i]=c:D.labels.push(c);DB.save();toast('Label saved')},
  /* ---------- layouts ---------- */
- layouts(){const L=[['pbp','Name + barcode + price'],['pqp','Name + QR + price'],['bar','Barcode only'],['qrt','QR + text'],['big','Big price tag']];openSheet(`<h3>Layouts</h3><p class="mut">Replaces the items on this label</p>${L.map(l=>`<div class="ar" onclick="LD.lay('${l[0]}')"><span class="ai">${I('layout',20)}</span><span class="at"><b>${l[1]}</b></span>${I('right',18)}</div>`).join('')}`)},
- async lay(k){const T=this.T,w=T.w,h=T.h,m=1.5,t=(x,y,ww,hh,tx,fs,o={})=>({type:'text',x,y,w:ww,h:hh,text:tx,fs,b:0,i:0,u:0,al:'l',font:'sans',inv:0,...o}),
+ layouts(){const L=[['pbp','Name + barcode + price'],['pqp','Name + QR + price'],['bar','Barcode only'],['qrt','QR + text'],['big','Big price tag'],['jtag','Jewellery tag (text left, barcode right)']];openSheet(`<h3>Layouts</h3><p class="mut">Replaces the items on this label</p>${L.map(l=>`<div class="ar" onclick="LD.lay('${l[0]}')"><span class="ai">${I('layout',20)}</span><span class="at"><b>${l[1]}</b></span>${I('right',18)}</div>`).join('')}`)},
+ build(k,T){const w=T.w,h=T.h,m=1.5,t=(x,y,ww,hh,tx,fs,o={})=>({type:'text',x,y,w:ww,h:hh,text:tx,fs,b:0,i:0,u:0,al:'l',font:'sans',inv:0,...o}),
   bc=(x,y,ww,hh)=>({type:'barcode',x,y,w:ww,h:hh,text:'{code}',show:1}),qr=(x,y,z)=>({type:'qr',x,y,w:z,h:z,text:'{code}'});let E=[];const fs=Math.max(2,Math.min(h/6,4)),wide=w>=h*1.6;
   if(k==='pbp')E=wide?[t(m,m,w*.6,fs*1.6,'{name}',fs,{b:1}),bc(m,m+fs*1.7,w*.6,h-fs*1.7-m*2),t(w*.62,h/2-fs,w*.36-m,fs*2.4,'{price}',fs*1.9,{b:1,al:'r'})]:[t(m,m,w-m*2,fs*1.8,'{name}',fs,{b:1,al:'c'}),bc(m,m+fs*1.9,w-m*2,(h-fs*3.8-m*2)*.7),t(m,h-fs*2-m,w-m*2,fs*1.8,'{price}',fs*1.5,{b:1,al:'c'})];
   if(k==='pqp'){const z=Math.min(h-m*2,w*.4);E=[qr(m,(h-z)/2,z),t(z+m*2,m,w-z-m*3,fs*2.4,'{name}',fs,{b:1}),t(z+m*2,h-fs*2.6-m,w-z-m*3,fs*2.2,'{price}',fs*1.7,{b:1})]}
   if(k==='bar')E=[bc(m,m,w-m*2,h-m*2)];if(k==='qrt'){const z=Math.min(h-m*2,w*.45);E=[qr(m,(h-z)/2,z),t(z+m*2,m,w-z-m*3,h-m*2,'{name}\n{price}\n{code}',fs,{b:1})]}
   if(k==='big')E=[t(m,m,w-m*2,fs*1.6,'{name}',fs,{al:'c'}),t(m,m+fs*1.7,w-m*2,h-fs*1.7-m*2,'{price}',Math.min(h*.45,w*.22),{b:1,al:'c'})];
-  E.forEach(e=>e.id=uid());this.T.els=E;this.sel=[];closeAll();await this.prep(this.T,this.vars);this.push();this.tools();this.draw()},
+  if(k==='jtag')E=[t(m,m,w*.36,h-m*2,'{name}\n{price}',Math.max(1.8,Math.min(h/4.2,3)),{b:1}),bc(w*.64,m,w*.34,h-m*2)];
+  E.forEach(e=>e.id=uid());return E},
+ async lay(k){this.T.els=this.build(k,this.T);this.sel=[];closeAll();await this.prep(this.T,this.vars);this.push();this.tools();this.draw()},
  /* ---------- printing ---------- */
  srcVars(id){const p=DB.d.prods.find(x=>x.id===id);if(!p)return this.vars;const d=new Date();return{name:p.name,price:inr(p.price),code:p.bc||'',cat:p.cat,date:d.toLocaleDateString('en-IN'),time:d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}},
  printSheet(){const T=this.T,P=DB.d.prods;openSheet(`<h3>Print label</h3><label class="lb">Fill with item</label><select id="pr_item" onchange="LD.prev()"><option value="">Sample values</option>${P.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
   <label class="lb">Copies</label><div class="row"><input id="pr_n" type="number" min="1" value="1" style="margin:0"><button class="btn o sm" onclick="const p=DB.d.prods.find(x=>x.id===$('#pr_item').value);$('#pr_n').value=Math.max(1,p?p.stock:1)">= stock</button></div>
-  <label class="lb" style="margin-top:12px">Preview</label><div class="lprev"><canvas id="prv" style="max-width:100%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)"></canvas></div><p class="muted" style="font-size:12px">Mode: ${({auto:'ESC/POS image',tsc:'TSC (TSPL)',zpl:'ZPL'})[T.mode]} • ${T.w}×${T.h}mm • ${T.dpi} dpi</p>
+  <label class="lb" style="margin-top:12px">Preview</label><div class="lprev"><canvas id="prv" style="max-width:100%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)"></canvas></div><p class="muted" style="font-size:12px">Mode: ${({auto:'ESC/POS image',tsc:'TSC (TSPL)',zpl:'ZPL'})[T.mode]} • ${T.w}×${T.h}mm • ${T.dpi} dpi</p>${T.mode==='auto'&&T.w*8>Paper.dots()?`<p class="danger" style="font-size:12.5px">Label is wider than your printer paper (${Math.floor(Paper.dots()/8)}mm). It will be scaled down. Set the paper size in Settings if this is wrong.</p>`:''}
   <div class="acts"><button class="btn b" onclick="LD.doPrint(0)">${I('printer',18)} Print to printer</button><button class="btn o" onclick="LD.doPrint(1)">System print</button></div>`);this.prev()},
  async prev(){const v=this.srcVars($('#pr_item').value),T=this.T;await this.prep(T,v);const cv=$('#prv');if(!cv)return;const s=Math.min(5,300/T.w);cv.width=T.w*s;cv.height=T.h*s;this.paint(cv.getContext('2d'),T,s,v,false)},
  async bitmap(T,v,dpi){await this.prep(T,v);const dm=(dpi||T.dpi||203)/25.4,W=Math.round(T.w*dm),H=Math.round(T.h*dm),b=document.createElement('canvas');b.width=W;b.height=H;const bc=b.getContext('2d');
@@ -139,14 +157,25 @@ const LD={T:null,sel:[],hist:[],redo:[],multi:false,show:true,zm:1,k:1,drag:null
    return Uint8Array.from([...A(head),...inv,...A(tail)])}
   if(T.mode==='zpl'){const hex=Array.from(b.d,x=>((fl?(~x)&255:x)).toString(16).padStart(2,'0')).join('').toUpperCase(),tot=b.d.length;return Uint8Array.from(A(`^XA^PW${b.W}^LL${b.H}^FO0,0^GFA,${tot},${tot},${b.rb},${hex}^FS^PQ${n}^XZ`))}
   const o=[];for(let k=0;k<n;k++){o.push(27,64);for(let y0=0;y0<b.H;y0+=128){const hh=Math.min(128,b.H-y0);o.push(29,118,48,0,b.rb&255,b.rb>>8,hh&255,hh>>8);for(let i=y0*b.rb;i<(y0+hh)*b.rb;i++)o.push(fl?(~b.d[i])&255:b.d[i])}o.push(27,100,2)}return Uint8Array.from(o)},
- async doPrint(sys){const T=this.T,v=this.srcVars($('#pr_item').value),n=Math.max(1,+$('#pr_n').value||1);
-  try{if(sys||(Native.on?!Native.has():DB.d.set.conn==='browser')){const cv=await this.bitmap(T,v,300),url=cv.toDataURL('image/png');Print.raw(Array(n).fill(`<div class="pg"><img src="${url}" style="width:${T.w}mm;height:${T.h}mm;display:block"></div>`).join(''),`${T.w}mm ${T.h}mm`,0);return}
-   const b=this.bits(await this.bitmap(T,v));await Thermal.send(this.bytes(T,b,n));closeAll();toast('Label sent to printer')}catch(e){toast('Printer: '+(e.message||e))}}
+ async sysPrint(T,v,n){const cv=await this.bitmap(T,v,300),url=cv.toDataURL('image/png');Print.raw(Array(n).fill(`<div class="pg"><img src="${url}" style="width:${T.w}mm;height:${T.h}mm;display:block"></div>`).join(''),`${T.w}mm ${T.h}mm`,0)},
+ async doPrint(sys){const T=this.T,v=this.srcVars($('#pr_item').value),n=Math.max(1,+$('#pr_n').value||1);if(!T.els.length)return toast('Add something to the label first');
+  if(sys||(Native.on?!Native.has():DB.d.set.conn==='browser'))try{return await this.sysPrint(T,v,n)}catch(e){return toast('Print failed: '+(e.message||e))}
+  try{let cv=await this.bitmap(T,v);if(T.mode==='auto'){const mx=Paper.dots();if(cv.width>mx){const f=document.createElement('canvas');f.width=mx;f.height=Math.max(1,Math.round(cv.height*mx/cv.width));const c=f.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,f.width,f.height);c.drawImage(cv,0,0,f.width,f.height);cv=f}}
+   await Thermal.send(this.bytes(T,this.bits(cv),n));closeAll();toast('Label sent to printer')}catch(e){toast('Printer problem ('+(e.message||e)+') — opening system print');try{await this.sysPrint(T,v,n)}catch(x){}}}
 };
-V.labels=()=>{const L=DB.d.labels;return `<div class="pagehead"><div><h1>Label Designer</h1><p>Design and print your own labels</p></div><button class="btn b sm" onclick="LD.newSheet()">+ New</button></div>
+V.labels=()=>{const L=DB.d.labels;return `<div class="pagehead"><div><h1>Label Designer</h1><p>Design and print your own labels</p></div><button class="btn b sm" onclick="LD.newSheet()">${LD.can()?'+ New':I('lock',14)+' New'}</button></div>
  <div class="panel card" style="margin-bottom:16px"><div class="row"><div><b>Item stock labels</b><div class="muted" style="font-size:13px;margin-top:2px">Quick barcode / QR labels for your items</div></div><button class="btn o sm" onclick="Label.open()">Open</button></div></div>
- ${L.map(t=>`<div class="card kc"><div class="lcard"><div class="th2"><img data-lid="${t.id}" alt=""></div><div style="flex:1;min-width:0"><b>${esc(t.name)}</b><div class="muted" style="font-size:12.5px">${t.w}×${t.h}mm • ${t.els.length} items</div></div></div>
+ <div id="ltpl"></div>${L.length?'<div class="agt">My labels</div>':''}${L.map(t=>`<div class="card kc"><div class="lcard"><div class="th2"><img data-lid="${t.id}" alt=""></div><div style="flex:1;min-width:0"><b>${esc(t.name)}</b><div class="muted" style="font-size:12.5px">${t.w}×${t.h}mm • ${t.els.length} items</div></div></div>
  <div class="acts"><button class="btn b sm" onclick="LD.open('${t.id}')">Edit</button><button class="btn o sm" onclick="LD.dup('${t.id}')">Duplicate</button><button class="btn o sm danger" onclick="LD.rm('${t.id}')">Delete</button></div></div>`).join('')||'<div class="emptybox">No custom labels yet. Tap + New to design one.</div>'}`};
-AFTER.labels=async()=>{for(const t of DB.d.labels){const im=document.querySelector(`[data-lid="${t.id}"]`);if(!im)continue;try{const cv=await LD.bitmap(t,LD.vars,100);im.src=cv.toDataURL('image/png')}catch(e){}}};
+AFTER.labels=async()=>{if(typeof LT!=='undefined')LT.paint();for(const t of DB.d.labels){const im=document.querySelector(`[data-lid="${t.id}"]`);if(!im)continue;try{const cv=await LD.bitmap(t,LD.vars,100);im.src=cv.toDataURL('image/png')}catch(e){}}};
 LD.dup=id=>{const t=JSON.parse(JSON.stringify(DB.d.labels.find(x=>x.id===id)));t.id=uid();t.name+=' copy';DB.d.labels.push(t);DB.save();render()};
 LD.rm=id=>Dlg.confirm('Delete this label design?',()=>{DB.d.labels=DB.d.labels.filter(x=>x.id!==id);DB.save();closeAll();render()},{yes:'Delete',danger:1});
+
+/* ready-made templates the owner shares from the Admin dashboard */
+const LT={list:(()=>{try{return JSON.parse(localStorage.getItem('bl_ltpl')||'[]')}catch(e){return[]}})(),
+ async load(){if(typeof Cloud==='undefined'||!Cloud.on||!navigator.onLine)return;try{const a=await Cloud.db.collection('labelTemplates').where('assign','==','all').get(),b=await Cloud.db.collection('labelTemplates').where('users','array-contains',Cloud.user.uid).get(),m={};[...a.docs,...b.docs].forEach(d=>m[d.id]={id:d.id,...d.data()});this.list=Object.values(m);localStorage.setItem('bl_ltpl',JSON.stringify(this.list))}catch(e){console.warn(e)}},
+ async paint(){await this.load();const el=$('#ltpl');if(!el)return;if(!this.list.length){el.innerHTML='';return}
+  el.innerHTML=`<div class="agt">Ready-made templates</div>`+this.list.map(t=>`<div class="card kc"><div class="lcard"><div class="th2"><img data-tid="${t.id}" alt=""></div><div style="flex:1;min-width:0"><b>${esc(t.name)}</b><div class="muted" style="font-size:12.5px">${t.w}×${t.h}mm${t.cat?' • '+esc(t.cat):''}</div></div></div><div class="acts"><button class="btn b sm" onclick="LT.print('${t.id}')">${I('printer',16)} Print</button><button class="btn o sm" onclick="LT.copy('${t.id}')">Use as my design</button></div></div>`).join('');
+  for(const t of this.list){const im=document.querySelector(`[data-tid="${t.id}"]`);if(!im)continue;try{im.src=(await LD.bitmap(t,LD.vars,100)).toDataURL('image/png')}catch(e){}}},
+ print(id){LD.T=JSON.parse(JSON.stringify(this.list.find(x=>x.id===id)));LD.printSheet()},
+ copy(id){if(!LD.can())return LD.lock();const t=JSON.parse(JSON.stringify(this.list.find(x=>x.id===id)));t.id=uid();delete t.assign;delete t.users;DB.d.labels.push(t);DB.save();toast('Added to My labels');render()}};

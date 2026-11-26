@@ -7,7 +7,7 @@ const Sub={
  state(){const s=this.cache();if(!s)return{k:'none'};if(s.status==='suspended')return{k:'suspended'};const now=Date.now();
   if(now<=s.accessUntil){const left=Math.max(0,Math.ceil(((s.plan==='trial'?s.trialEnds:s.planEnds)-now)/864e5));return{k:s.plan==='trial'?'trial':'active',left,plan:s.plan,grace:left===0&&(s.plan==='trial'?s.trialEnds:s.planEnds)<now}}
   return{k:'expired'}},
- limit(){const s=this.state();if(s.k==='trial')return{branches:3,cloud:true};const p=this.plan();return{branches:p?p.limits.branches:1,cloud:p?p.cloud!==false:false}},
+ limit(){const s=this.state();if(s.k==='trial')return{branches:3,cloud:true,designer:true};const p=this.plan();return{branches:p?p.limits.branches:1,cloud:p?p.cloud!==false:false,designer:!!(p&&p.designer)}},
  label(){const s=this.state(),p=this.plan();return s.k==='trial'?'Free trial':s.k==='active'?(p?p.name:'Active'):s.k==='expired'?'Expired':s.k==='suspended'?'Suspended':'—'}
 };
 const Branch={cur:localStorage.getItem('bl_branch')||'main',

@@ -137,3 +137,8 @@ main{padding:6px 16px 0}.pagehead{margin:20px 0 18px}.pagehead h1{line-height:1.
 .icg{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:12px}.icg button{aspect-ratio:1;border:1.5px solid var(--ln);background:var(--sf);border-radius:10px;font-size:20px}.icg .on{border-color:var(--b);background:color-mix(in srgb,var(--b) 10%,var(--sf))}
 details.ds{border:1.5px solid var(--ln);border-radius:16px;padding:12px 14px;margin-bottom:12px;background:var(--sf)}details.ds summary{font-weight:700;cursor:pointer}details.ds[open] summary{margin-bottom:12px}
 .lcard{display:flex;gap:14px;align-items:center}.lcard .th2{width:96px;flex:none;background:#fff;border:1px solid var(--ln);border-radius:10px;padding:6px;display:grid;place-items:center;min-height:52px}.lcard .th2 img{max-width:100%;max-height:70px}
+
+/* ---- v11: label editor rulers / zoom ---- */
+.ldc{display:flex;place-items:unset}.ldw{display:grid;grid-template-columns:20px auto;grid-template-rows:20px auto;margin:auto;box-shadow:0 4px 18px rgba(0,0,0,.18)}.rc0{background:#eef0f5}.rul{display:block}
+.ldinfo{background:#fff;padding:7px 12px;font-size:12px;color:var(--mut);text-align:center;border-top:1px solid var(--ln)}
+.ldt button{min-width:40px}.ldw canvas#ldcv{box-shadow:none}
